@@ -13,7 +13,7 @@ classdef Mapper < handle
         function this = Mapper()           
             % this.map3D = occupancyMap3D(10);
             this.bigCloud = pointCloud(zeros([1, 3]));
-            this.player = pcplayer([0 30],[-25 25],[0 5]);
+            this.player = pcplayer([0 30],[-30 30],[0 5]);
         end
 
         %% Sonar laser scan callback.
@@ -37,7 +37,7 @@ classdef Mapper < handle
             
             xyzPoints = zeros([size(sonarMsg.Ranges, 1), 3]);
             for i=1:size(sonarMsg.Ranges, 1)
-                point = sonar2NEDtest(pos.', quat, [0.358, 0, -0.118].', [scan.Cartesian(i,1), scan.Cartesian(i,2), 0]).'; 
+                point = sonar2NED(pos.', quat, [0.358, 0, -0.118].', [scan.Cartesian(i,1), scan.Cartesian(i,2), 0]).'; 
                 xyzPoints(i, :) = point(1:3);
             end
             ptCloud = pointCloud(xyzPoints);   
