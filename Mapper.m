@@ -29,10 +29,13 @@ classdef Mapper < handle
                pos(1) = poseSub.LatestMessage.Position.X;
                pos(2) = poseSub.LatestMessage.Position.Y;
                pos(3) = poseSub.LatestMessage.Position.Z;
+               
+
                quat(1) = poseSub.LatestMessage.Orientation.W;
-               quat(2) = poseSub.LatestMessage.Orientation.X;
-               quat(3) = poseSub.LatestMessage.Orientation.Y;
-               quat(4) = poseSub.LatestMessage.Orientation.Z;
+               % conjuger le quaternion
+               quat(2) = -poseSub.LatestMessage.Orientation.X;
+               quat(3) = -poseSub.LatestMessage.Orientation.Y;
+               quat(4) = -poseSub.LatestMessage.Orientation.Z;
             end
             
             xyzPoints = zeros([size(sonarMsg.Ranges, 1), 3]);
