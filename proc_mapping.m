@@ -1,7 +1,8 @@
 function proc_mapping
     % Global variables
-    global newSonarMsg;
+    global newSonarMsg newSonarPtMsg;
     newSonarMsg = false;
+    newSonarPtMsg = false;
     
     % Variables
     rosSpin = 10;
@@ -10,7 +11,7 @@ function proc_mapping
  
     % Subscribers
     poseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");
-    sonarSub = rossubscriber('/provider_sonar/LaserScan', 'sensor_msgs/LaserScan', @sonarCallback,"DataFormat", "struct");
+    sonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @sonarCallback, "DataFormat", "struct");
     
     % Objects
     mapper = Mapper();
