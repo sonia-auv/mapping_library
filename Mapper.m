@@ -50,7 +50,6 @@ classdef Mapper < handle
             quat = [1, 0, 0, 0];
             
             % Getting the sub pose.
-
             fprintf("INFO : proc mapping : Pose received. \n");
             pos(1) = poseMsg.Position.X;
             pos(2) = poseMsg.Position.Y;
