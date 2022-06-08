@@ -1,45 +1,53 @@
-classdef Mapper < handle
-    % MAPPER Summary of this class goes here
+classdef PointCloudBundler < handle
+    %   PointCloudBundler Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = private)
-        % map3D; % Occupancy map.
         bigCloud;
         player;
+        bundle;
 
         % Subscribers
-        poseSub;
         startStopSub;
+        poseSub;
         sonarSub;
+
+        % State
+        lastBundleState;
+        bundleState;
     end
     
     methods
-        %% Mapper Constructor
-        function this = Mapper()           
-            % this.map3D = occupancyMap3D(10);
+        %% PointCloudBundler Constructor
+        function this = PointCloudBundler()           
             this.bigCloud = pointCloud(zeros([1, 3]), 'Intensity', 0);
-            this.player = pcplayer([-20 20],[-20 20],[0 5], 'VerticalAxisDir','Down');
+            this.bundle = zeros(3, 4);
+            this.bundle = zeros(1, 4);
 
             % Subscribers
-            this.poseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");
             this.startStopSub = rossubscriber('/proc_mapping/start_stop', 'std_msgs/Bool', @this.startStopCallback, "DataFormat", "struct");
+            this.poseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");    
             this.sonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
+        
+            this.lastBundleState = false;
         end
-        %% ROS Spin
-        function spin(this, spin)
-            killNode = false;
-            reset(spin);
-            fprintf('INFO : proc mapping : Node is started \n');
-            fprintf('INFO : proc mapping : Wait for laser scan \n');
-            
-            while ~killNode
-                % Add the laser scan to the point cloud when received.
-                if this.persistentDataStore('newSonarMsg')
+        %% Step function
+        function out = step(this)
+            if this.lastBundleState && ~this.persistentDataStore('bundleStarted')
+                % Record finished.
+                this.lastBundleState = false;
+                out = false;
+                return;
+            else
+                % Recording or waiting.
+                if this.persistentDataStore('newSonarMsg') && this.persistentDataStore('bundleStarted')
                     this.add2PtCloud(this.sonarSub.LatestMessage, this.poseSub.LatestMessage);
                     this.persistentDataStore('newSonarMsg', false);
                 end
-                waitfor(spin);
             end
+            this.lastBundleState = this.persistentDataStore('bundleStarted');
+            out = true;
+            return;
         end
 
         %% Adding to the point cloud.
@@ -59,7 +67,8 @@ classdef Mapper < handle
             quat(2) = poseMsg.Orientation.X;
             quat(3) = poseMsg.Orientation.Y;
             quat(4) = poseMsg.Orientation.Z;
-
+            
+            xyzi = zeros(sonarMsg.Width, 4);
             xyzi(:, 1:3) = rosReadXYZ(sonarMsg);
             
             % Temporary swap.
@@ -72,35 +81,37 @@ classdef Mapper < handle
             rowsToDelete = any(xyzi(:,4) < 0.07 & norm(xyzi(:,1:3)) > 5.0, 2);
             xyzi(rowsToDelete, :) = [];
 
-            xyzPoints = zeros([size(xyzi, 1), 3]);
+            %xyzPoints = zeros([size(xyzi, 1), 3]);
             for i=1:size(xyzi, 1)
                 point = sonar2NED(pos.', quat, [0.358, 0, -0.118].', [xyzi(i,1), xyzi(i,2), 0]).'; 
-                xyzPoints(i, :) = point(1:3);
+                xyzi(i, 1:3) = point(1:3);
             end
-            ptCloud = pointCloud(xyzPoints, 'Intensity', xyzi(:, 4));   
-            this.bigCloud = pcmerge(this.bigCloud, ptCloud, 0.01);
-            
-            if coder.target('MATLAB')
-                view(this.player, this.bigCloud);
+            this.bundle = [this.bundle; xyzi];
+        end
+        
+        %% Getters / Setters
+        function out = getBundle(this, lin, col)
+            if nargin == 1
+                out = this.bundle;
+            elseif nargin == 3
+                out = this.bundle(lin, col);
             end
-            % this.bigCloud = pcmerge(this.bigCloud, ptCloud, 1);
-            % insertPointCloud(this.map3D, [0,0,0,1,0,0,0], ptCloud, double(sonarMsg.RangeMax));
         end
     end
 
     %% ROS Callbacks
     methods(Static, Access = private)
+        function sonarCallback(src, msg)
+            PointCloudBundler.persistentDataStore('newSonarMsg', true);
+        end
+
         function startStopCallback(src, msg)
-            Mapper.persistentDataStore('bundleStarted', msg.Data);
-            if Mapper.persistentDataStore('bundleStarted')
+            PointCloudBundler.persistentDataStore('bundleStarted', msg.Data);
+            if PointCloudBundler.persistentDataStore('bundleStarted')
                 fprintf('INFO : proc mapping : Bundle record started \n');
             else
                 fprintf('INFO : proc mapping : Bundle record stopped \n');
             end
-        end
-        
-        function sonarCallback(src, msg)
-            Mapper.persistentDataStore('newSonarMsg', true);
         end
 
         function out = persistentDataStore(variable, value)
@@ -111,7 +122,7 @@ classdef Mapper < handle
             if isempty(newSonarMsg)
                 newSonarMsg = false;
             end
-    
+
             if isempty(bundleStarted)
                 bundleStarted = false;
             end
@@ -121,21 +132,20 @@ classdef Mapper < handle
                     case (strcmpi(variable,'newSonarMsg') == 1)
                         out = newSonarMsg;
                         return
-    
+
                     case (strcmpi(variable,'bundleStarted') == 1)
                         out = bundleStarted;
                         return 
     
                     otherwise
                         out = [];  
-                end
-    
+                end   
             elseif nargin == 2 % SET
                 switch true
                     case (strcmpi(variable,'newSonarMsg') == 1)
                         newSonarMsg = value;
                         return
-        
+
                     case (strcmpi(variable,'bundleStarted') == 1)
                         bundleStarted = value;
                         return 

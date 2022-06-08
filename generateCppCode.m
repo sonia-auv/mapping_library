@@ -18,7 +18,7 @@
     codegen proc_mapping -v -args {} -config cfg
 
 % Load build Info mat
-    load('./codegen/exe/proc_planner/buildInfo.mat')
+    load('./codegen/exe/proc_mapping/buildInfo.mat')
 
 % Generate zip file
     packNGo(buildInfo, 'fileName', 'proc_mapping.zip');
