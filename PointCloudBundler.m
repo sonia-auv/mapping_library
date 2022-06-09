@@ -78,7 +78,7 @@ classdef PointCloudBundler < handle
 
             xyzi(:, 4) = rosReadField(sonarMsg, 'intensity');
 
-            rowsToDelete = any(xyzi(:,4) < 0.07 & norm(xyzi(:,1:3)) > 5.0, 2);
+            rowsToDelete = any(xyzi(:,4) < 0.07 & sqrt(xyzi(:,1).^2+xyzi(:,2).^2+xyzi(:,3).^2) > 5.0, 2);
             xyzi(rowsToDelete, :) = [];
 
             %xyzPoints = zeros([size(xyzi, 1), 3]);
