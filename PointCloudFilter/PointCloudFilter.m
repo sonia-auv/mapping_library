@@ -7,8 +7,16 @@ classdef (Abstract) PointCloudFilter
   
     methods (Abstract, Access = public )
  
-        filteredPT = filter(this,rawPT);
+        filteredPT = filter(this, bundle);
 
+    end
+
+    methods
+        function ptShow(this, ptCloud)
+            if coder.target('MATLAB')
+                pcshow(ptCloud);
+            end
+        end
     end
 end
 

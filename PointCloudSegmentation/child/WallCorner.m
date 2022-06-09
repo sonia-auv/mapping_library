@@ -3,27 +3,27 @@ classdef WallCorner < PointClouldSegmentation
     %   Detailed explanation goes here
     
     properties
-        Property
+
     end
     
     methods
         function obj = WallCorner()
             %WALLCORNER Construct an instance of this class
             %   Detailed explanation goes here
-            obj.Property1 = inputArg1 + inputArg2;
         end
         
-        function feature = SegementByAtribute(this,filteredPT);
+        function feature = SegementByAtribute(this, filteredPT);
             % Get first wall
-            [model1, inlierIndices, outlierIndices] = pcfitplane(denoiseCloud, 0.02);
-            plane1 = select(denoiseCloud, inlierIndices);
-            remadenoisinCloud = select(denoiseCloud, outlierIndices);
+            [model1, inlierIndices, outlierIndices] = pcfitplane(filteredPT, 0.02);
 
-            % Get second wall
+            plane1 = select(filteredPT, inlierIndices);
+            remainCloud = select(filteredPT, outlierIndices);
+            
             [model2, inlierIndices2, outlierIndices2] = pcfitplane(remainCloud, 0.02);
             plane2 = select(remainCloud, inlierIndices2);
 
             if coder.target('MATLAB')
+                figure('Name', 'Plane1');
                 pcshow(plane1);
                 hold on 
                 pcshow(plane2);
@@ -31,7 +31,7 @@ classdef WallCorner < PointClouldSegmentation
                 plot(model1);
                 plot(model2);
             end
-            
+            feature = pcmerge(plane1, plane2, 0.01);
         end
     end
 end
