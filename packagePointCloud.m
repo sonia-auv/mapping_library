@@ -1,6 +1,8 @@
 function lidarMsgOut = packagePointCloud(XYZ, RGB)
 
     lidarMsgOut = rosmessage('sensor_msgs/PointCloud2',"DataFormat","struct");
+    lidarMsgOut.IsBigendian = false;
+    lidarMsgOut.IsDense = true; 
     lidarMsgOut.Header.FrameId = 'BODY';
     % Calculate number of points
     numPts = size(XYZ,1);
@@ -25,7 +27,7 @@ function lidarMsgOut = packagePointCloud(XYZ, RGB)
     lidarMsgOut.Fields(1).Offset = uint32(0);
     lidarMsgOut.Fields(2).Offset = uint32(4);
     lidarMsgOut.Fields(3).Offset = uint32(8);
-    lidarMsgOut.Fields(4).Offset = uint32(16);
+    lidarMsgOut.Fields(4).Offset = uint32(12);
     
     % Assign raw point cloud data in uint8 format
     for idx = 1:numPts

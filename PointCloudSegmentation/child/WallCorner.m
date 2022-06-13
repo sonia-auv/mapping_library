@@ -12,7 +12,7 @@ classdef WallCorner < PointClouldSegmentation
             %   Detailed explanation goes here
         end
         
-        function feature = SegementByAtribute(this, filteredPT);
+        function feature = SegementByAtribute(this, filteredPT)
             % Get first wall
             [model1, inlierIndices, outlierIndices] = pcfitplane(filteredPT, 0.02);
 
