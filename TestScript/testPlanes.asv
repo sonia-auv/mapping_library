@@ -28,10 +28,7 @@ plot(model1);
 plot(model2);
 
 [p1,q1] = getOrientedPoint(model1, plane1)
-poseplot(quaternion(q1),'Position',p1)
-
-[p2,q2] = getOrientedPoint(model2, plane2)
-poseplot(quaternion(q2),'Position',p2)
+poseplot(quaternion(q),'Position',p)
 %% Get orientedPoint
 %https://math.stackexchange.com/questions/2356649/how-to-find-the-quaternion-representing-the-rotation-between-two-3-d-vectors
 % fossen P.33
