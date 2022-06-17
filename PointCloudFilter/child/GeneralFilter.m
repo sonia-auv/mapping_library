@@ -13,7 +13,7 @@ classdef GeneralFilter < PointCloudFilter
         function filteredPT = filter(this, bundle)
             % Create the point cloud and apply denoise filter plus a downsample.
             rawPT = pointCloud(bundle(:, 1:3), 'Intensity', bundle(:, 4));
-            filteredPT = pcdenoise(pcdownsample(rawPT, 'gridAverage', 0.01));
+            filteredPT = pcdenoise(pcdownsample(rawPT, 'gridAverage', 0.05));
         end
     end
 end
