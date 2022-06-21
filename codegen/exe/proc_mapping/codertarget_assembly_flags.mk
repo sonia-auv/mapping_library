@@ -1,0 +1,3 @@
+ASFLAGS_ADDITIONAL = 
+STACK_SIZE = 200000
+TARGET_PKG_INSTALLDIR = /usr/local/MATLAB/R2022a/toolbox/ros/codertarget

@@ -6,6 +6,9 @@ classdef PointCloudBundler < handle
         bigCloud;
         player;
         bundle;
+        
+        % Filter
+        mPreprocessing;
 
         % Subscribers
         startStopSub;
@@ -33,9 +36,12 @@ classdef PointCloudBundler < handle
             this.sonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
         
             this.lastBundleState = false;
+
+            this.mPreprocessing = Preprocessing();
         end
         %% Step function
         function out = step(this)
+
             if this.lastBundleState && ~this.persistentDataStore('bundleStarted')
                 % Record finished.
                 this.lastBundleState = false;
@@ -45,7 +51,7 @@ classdef PointCloudBundler < handle
                 % Recording or waiting.
                 if this.persistentDataStore('newSonarMsg') && this.persistentDataStore('bundleStarted')
                     this.add2PtCloud(this.sonarSub.LatestMessage, this.poseSub.LatestMessage);
-                    this.persistentDataStore('newSonarMsg', false);
+                    this.persistentDataStore('newSonarMsg', false);                  
                 end
             end
             this.lastBundleState = this.persistentDataStore('bundleStarted');
@@ -81,8 +87,10 @@ classdef PointCloudBundler < handle
 
             xyzi(:, 4) = rosReadField(sonarMsg, 'intensity');
 
-            rowsToDelete = any(xyzi(:,4) < 0.07 & sqrt(xyzi(:,1).^2+xyzi(:,2).^2+xyzi(:,3).^2) > 0.1, 2);
-            xyzi(rowsToDelete, :) = [];
+
+            xyzi = this.mPreprocessing.filter(xyzi);
+%             rowsToDelete = any(xyzi(:,4) < 0.07 | sqrt(xyzi(:,1).^2+xyzi(:,2).^2+xyzi(:,3).^2) > 0.1, 2);
+%             xyzi(rowsToDelete, :) = [];
 
             for i=1:size(xyzi, 1)
                 point = sonar2NED(pos.', quat, [0.358, 0, -0.118].', [xyzi(i,1), xyzi(i,2), 0]).'; 
