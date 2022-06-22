@@ -3,58 +3,71 @@ classdef PointCloudBundler < handle
     %   Detailed explanation goes here
     
     properties (Access = private)
-        bigCloud;
-        player;
-        bundle;
+        mBigCloud;
+        mPlayer;
+        mBundle;
         
         % Filter
         mPreprocessing;
 
         % Subscribers
-        startStopSub;
-        poseSub;
-        sonarSub;
+        mStartStopSub;
+        mClearBundleSub;
+        mPoseSub;
+        mSonarSub;
 
         % State
-        lastBundleState;
-        bundleState;
+        mLastBundleState;
+        mBundleState;
     end
     
     methods
         %% PointCloudBundler Constructor
         function this = PointCloudBundler()   
             if coder.target('MATLAB')
-                this.bigCloud = pointCloud(zeros([1, 3]), 'Intensity', 0);
-                this.player = pcplayer([-20 20],[-20 20],[0 5], 'VerticalAxisDir','Down');
+                this.mBigCloud = pointCloud(zeros([1, 3]), 'Intensity', 0);
+                this.mPlayer = pcplayer([-20 20],[-20 20],[0 5], 'VerticalAxisDir','Down');
             end
-            this.bundle = zeros(3, 4);
-            this.bundle = zeros(1, 4);
+            this.mBundle = zeros(3, 4);
+            this.mBundle = zeros(1, 4);
 
             % Subscribers
-            this.startStopSub = rossubscriber('/proc_mapping/start_stop', 'std_msgs/Bool', @this.startStopCallback, "DataFormat", "struct");
-            this.poseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");    
-            this.sonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
-        
-            this.lastBundleState = false;
+            this.mStartStopSub = rossubscriber('/proc_mapping/start_stop', 'std_msgs/Bool', @this.startStopCallback, "DataFormat", "struct");
+            this.mClearBundleSub = rossubscriber('/proc_mapping/clear_bundle', 'std_msgs/Empty', @this.clearBundleCallback, "DataFormat", "struct");
+            this.mPoseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");    
+            this.mSonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
+
+            this.mLastBundleState = false;
 
             this.mPreprocessing = Preprocessing();
         end
         %% Step function
         function out = step(this)
-
-            if this.lastBundleState && ~this.persistentDataStore('bundleStarted')
+            % Verifiy if we just stop the record.
+            if this.mLastBundleState && ~this.persistentDataStore('bundleStarted')
                 % Record finished.
-                this.lastBundleState = false;
+                this.mLastBundleState = false;
                 out = false;
                 return;
             else
                 % Recording or waiting.
                 if this.persistentDataStore('newSonarMsg') && this.persistentDataStore('bundleStarted')
-                    this.add2PtCloud(this.sonarSub.LatestMessage, this.poseSub.LatestMessage);
+                    this.add2PtCloud(this.mSonarSub.LatestMessage, this.mPoseSub.LatestMessage);
                     this.persistentDataStore('newSonarMsg', false);                  
                 end
             end
-            this.lastBundleState = this.persistentDataStore('bundleStarted');
+
+            % Clear the buffer if requested.
+            if this.persistentDataStore('newClearBundleMsg')
+                fprintf('INFO : proc mapping : Clearing the bundle \n');
+                this.mBundle = zeros(1, 4);
+                if coder.target('MATLAB')
+                    this.mBigCloud = pointCloud(zeros([1, 3]), 'Intensity', 0);
+                    view(this.mPlayer, this.mBigCloud);
+                end
+                this.persistentDataStore('newClearBundleMsg', false);
+            end
+            this.mLastBundleState = this.persistentDataStore('bundleStarted');
             out = true;
             return;
         end
@@ -87,7 +100,6 @@ classdef PointCloudBundler < handle
 
             xyzi(:, 4) = rosReadField(sonarMsg, 'intensity');
 
-
             xyzi = this.mPreprocessing.filter(xyzi);
 %             rowsToDelete = any(xyzi(:,4) < 0.07 | sqrt(xyzi(:,1).^2+xyzi(:,2).^2+xyzi(:,3).^2) > 0.1, 2);
 %             xyzi(rowsToDelete, :) = [];
@@ -98,18 +110,18 @@ classdef PointCloudBundler < handle
             end
             if coder.target('MATLAB')
                 ptCloud = pointCloud(xyzi(:, 1:3), 'Intensity', xyzi(:, 4));  
-                this.bigCloud = pcmerge(this.bigCloud, ptCloud, 0.01);
-                view(this.player, this.bigCloud);
+                this.mBigCloud = pcmerge(this.mBigCloud, ptCloud, 0.01);
+                view(this.mPlayer, this.mBigCloud);
             end
-            this.bundle = [this.bundle; xyzi];
+            this.mBundle = [this.mBundle; xyzi];
         end
         
         %% Getters / Setters
         function out = getBundle(this, lin, col)
             if nargin == 1
-                out = this.bundle;
+                out = this.mBundle;
             elseif nargin == 3
-                out = this.bundle(lin, col);
+                out = this.mBundle(lin, col);
             end
         end
     end
@@ -129,9 +141,13 @@ classdef PointCloudBundler < handle
             end
         end
 
+        function clearBundleCallback(src, msg)
+            PointCloudBundler.persistentDataStore('newClearBundleMsg', true);
+        end
+
         function out = persistentDataStore(variable, value)
     
-            persistent newSonarMsg bundleStarted;
+            persistent newSonarMsg bundleStarted newClearBundleMsg;
     
             % Initial variables
             if isempty(newSonarMsg)
@@ -140,6 +156,10 @@ classdef PointCloudBundler < handle
 
             if isempty(bundleStarted)
                 bundleStarted = false;
+            end
+
+            if isempty(newClearBundleMsg)
+                newClearBundleMsg = false;
             end
     
             if nargin == 1 % GET
@@ -150,7 +170,11 @@ classdef PointCloudBundler < handle
 
                     case (strcmpi(variable,'bundleStarted') == 1)
                         out = bundleStarted;
-                        return 
+                        return
+                        
+                    case (strcmpi(variable,'newClearBundleMsg') == 1)
+                        out = newClearBundleMsg;
+                        return
     
                     otherwise
                         out = [];  
@@ -163,6 +187,10 @@ classdef PointCloudBundler < handle
 
                     case (strcmpi(variable,'bundleStarted') == 1)
                         bundleStarted = value;
+                        return 
+
+                    case (strcmpi(variable,'newClearBundleMsg') == 1)
+                        newClearBundleMsg = value;
                         return 
                 end 
             end
