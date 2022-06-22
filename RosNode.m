@@ -27,10 +27,13 @@ classdef RosNode
             while ~killNode
                 if ~ptBundler.step()
                     fprintf('INFO : proc mapping : Not bundling. \n');
-                    filt = ptFilter.filter(ptBundler.getBundle());
-                    output = wCorner.SegementByAtribute(filt);
-                    pack = packagePointCloud(single(output.Location), single(output.Intensity));
-                    send(this.outputPublisher, pack);
+                    bundle = ptBundler.getBundle();
+                    if size(bundle, 1) > 1
+                        filt = ptFilter.filter(bundle);
+                        output = wCorner.SegementByAtribute(filt);
+                        pack = packagePointCloud(single(output.Location), single(output.Intensity));
+                        send(this.outputPublisher, pack);
+                    end
                 else
                     % fprintf('INFO : proc mapping : Bundling or waiting. \n');
                 end

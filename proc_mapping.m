@@ -11,7 +11,6 @@ function proc_mapping
     % Variables
     rosSpin = 20;
     r = rosrate(rosSpin);   
-    
     % Proc_mapping startup
     rosNode = RosNode();
     rosNode.spin(r);
