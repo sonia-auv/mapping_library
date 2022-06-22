@@ -33,7 +33,7 @@ classdef PointCloudBundler < handle
 
             % Subscribers
             this.mStartStopSub = rossubscriber('/proc_mapping/start_stop', 'std_msgs/Bool', @this.startStopCallback, "DataFormat", "struct");
-            this.mClearBundleSub = rossubscriber('/proc_mapping/clear_bundle', 'std_msgs/Empty', @this.clearBundleCallback, "DataFormat", "struct");
+            this.mClearBundleSub = rossubscriber('/proc_mapping/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct");
             this.mPoseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");    
             this.mSonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
 

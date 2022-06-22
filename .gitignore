@@ -1,4 +1,5 @@
 proc_mapping.zip
+proc_mapping/
 
 # Windows default autosave extension
 *.asv
