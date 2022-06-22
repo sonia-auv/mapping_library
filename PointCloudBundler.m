@@ -15,6 +15,7 @@ classdef PointCloudBundler < handle
         mClearBundleSub;
         mPoseSub;
         mSonarSub;
+        mImageSub;
 
         % State
         mLastBundleState;
@@ -36,6 +37,8 @@ classdef PointCloudBundler < handle
             this.mClearBundleSub = rossubscriber('/proc_mapping/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct");
             this.mPoseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");    
             this.mSonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
+
+            this.mImageSub = rossubscriber('/camera_array/front/image_raw/compressed', 'sensor_msgs/CompressedImage', "DataFormat", "struct");
 
             this.mLastBundleState = false;
 
@@ -109,7 +112,11 @@ classdef PointCloudBundler < handle
                 xyzi(i, 1:3) = point(1:3);
             end
             if coder.target('MATLAB')
-                ptCloud = pointCloud(xyzi(:, 1:3), 'Intensity', xyzi(:, 4));  
+                ptCloud = pointCloud(xyzi(:, 1:3), 'Intensity', xyzi(:, 4));
+                % ptCloud with image.
+                % Getting the image.
+                im = rosReadImage(this.mImageSub.LatestMessage);
+                %imshow(im);
                 this.mBigCloud = pcmerge(this.mBigCloud, ptCloud, 0.01);
                 view(this.mPlayer, this.mBigCloud);
             end

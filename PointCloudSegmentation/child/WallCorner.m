@@ -1,5 +1,5 @@
 classdef WallCorner < PointClouldSegmentation
-    %WALLCORNER Summary of this class goes here
+    % WALLCORNER Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = private)
@@ -20,33 +20,31 @@ classdef WallCorner < PointClouldSegmentation
             plane1 = select(filteredPT, inlierIndices);
             remainCloud = select(filteredPT, outlierIndices);
             
-            [model2, inlierIndices2, outlierIndices2] = pcfitplane(remainCloud, 0.02);
-            plane2 = select(remainCloud, inlierIndices2);
+            % [model2, inlierIndices2, outlierIndices2] = pcfitplane(remainCloud, 0.02);
+            % plane2 = select(remainCloud, inlierIndices2);
 
             % Extraire les point orienté
             [p1, q1] = this.getOrientedPointOnPlanarFace(model1, plane1);
-            [p2, q2] = this.getOrientedPointOnPlanarFace(model2, plane2);
+            % [p2, q2] = this.getOrientedPointOnPlanarFace(model2, plane2);
 
             if coder.target('MATLAB')
                 figure('Name', 'Plane1');
                 pcshow(plane1);
                 hold on 
-                pcshow(plane2);
+                % pcshow(plane2);
 
                 plot(model1);
-                plot(model2);
+                % plot(model2);
 
                 poseplot(quaternion(q1),'Position',p1);
-                poseplot(quaternion(q2),'Position',p2);
-
+                % poseplot(quaternion(q2),'Position',p2);
             end
-
-            feature = pcmerge(plane1, plane2, 0.01);
+            feature = [q1, p1];
+            %feature = pcmerge(plane1, plane2, 0.01);
         end
     end
 
     methods(Access = private)
-
         function [p,q] = getOrientedPointOnPlanarFace(this,model, plane)
 
             % vecteur initial

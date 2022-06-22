@@ -3,13 +3,15 @@ classdef RosNode
     %   Detailed explanation goes here
     
     properties (Access = private)
-        outputPublisher;
+        outputCloudPublisher;
+        outputPosePublisher;
     end
     
     methods
         %% ROS Node constructor
         function this = RosNode()
-            this.outputPublisher = rospublisher("/proc_mapping/output","sensor_msgs/PointCloud2","DataFormat","struct");
+            this.outputCloudPublisher = rospublisher("/proc_mapping/output","sensor_msgs/PointCloud2","DataFormat","struct");
+            this.outputPosePublisher = rospublisher("/proc_mapping/output_pose","sonia_common/AddPose","DataFormat","struct");
         end
         
         %% ROS Spin
@@ -30,9 +32,23 @@ classdef RosNode
                     bundle = ptBundler.getBundle();
                     if size(bundle, 1) > 1
                         filt = ptFilter.filter(bundle);
-                        output = wCorner.SegementByAtribute(filt);
-                        pack = packagePointCloud(single(output.Location), single(output.Intensity));
-                        send(this.outputPublisher, pack);
+                        outputPose = wCorner.SegementByAtribute(filt);
+                        
+                        rotation = quat2eul(outputPose(1:4));
+                        position = outputPose(5:7);
+                        
+                        pose = rosmessage('sonia_common/AddPose',"DataFormat","struct");
+                        disp(position);
+                        pose.Position.X = position(1);
+                        pose.Position.Y = position(2);
+                        pose.Position.Z = position(3);
+                        disp(rotation);
+                        pose.Orientation.X = rotation(1);
+                        pose.Orientation.Y = rotation(2);
+                        pose.Orientation.Z = rotation(3);
+                        send(this.outputPosePublisher, pose);
+                        % pack = packagePointCloud(single(output.Location), single(output.Intensity));
+                        % send(this.outputCloudPublisher, pack);
                     end
                 else
                     % fprintf('INFO : proc mapping : Bundling or waiting. \n');
