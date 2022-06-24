@@ -115,8 +115,13 @@ classdef PointCloudBundler < handle
                 ptCloud = pointCloud(xyzi(:, 1:3), 'Intensity', xyzi(:, 4));
                 % ptCloud with image.
                 % Getting the image.
-                im = rosReadImage(this.mImageSub.LatestMessage);
-                %imshow(im);
+%                 im = rosReadImage(this.mImageSub.LatestMessage);
+%                 % Camera parameters.
+%                 intrinsics = cameraIntrinsics(focalLength, principalPoint, imageSize)
+%                 % Transformation from camera to sonar.
+%                 transform = rigid3d([1, 0, 0; 0, 1, 0; 0, 0, 1], [0, 0, 0]);
+%                 ptCloudOut = fuseCameraToLidar(im, ptCloud, intrinsics, transform);
+
                 this.mBigCloud = pcmerge(this.mBigCloud, ptCloud, 0.01);
                 view(this.mPlayer, this.mBigCloud);
             end

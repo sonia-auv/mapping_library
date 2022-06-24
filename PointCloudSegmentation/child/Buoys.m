@@ -1,4 +1,4 @@
-classdef WallCorner < PointCloudSegmentation
+classdef Buoys < PointCloudSegmentation
     % WALLCORNER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -7,7 +7,7 @@ classdef WallCorner < PointCloudSegmentation
     end
     
     methods
-        function this = WallCorner()
+        function this = Buoys()
             %WALLCORNER Construct an instance of this class
             %   Detailed explanation goes here
             this@PointCloudSegmentation();
@@ -15,12 +15,15 @@ classdef WallCorner < PointCloudSegmentation
         
         function feature = SegementByAtribute(this, filteredPT)
             % Get first wall
-            [model1, inlierIndices, outlierIndices] = pcfitplane(filteredPT, 0.02);
-
-            plane1 = select(filteredPT, inlierIndices);
+            [modelCyl1, inlierIndices, outlierIndices] = pcfitcylinder(filteredPT, 0.02);
+            cyl1 = select(filteredPT, inlierIndices);
             remainCloud = select(filteredPT, outlierIndices);
+
+            [model1, inlierIndices1, outlierIndices1] = pcfitplane(remainCloud, 0.02, [1,0,0], 45);
+            plane1 = select(remainCloud, inlierIndices1);
+            remainCloud = select(remainCloud, outlierIndices1);
             
-            [model2, inlierIndices2, outlierIndices2] = pcfitplane(remainCloud, 0.02);
+            [model2, inlierIndices2, outlierIndices2] = pcfitplane(remainCloud, 0.02, [1,0,0], 45);
             plane2 = select(remainCloud, inlierIndices2);
 
             % Extraire les point orienté
@@ -40,23 +43,6 @@ classdef WallCorner < PointCloudSegmentation
                 poseplot(quaternion(q2),'Position',p2);
             end
             feature = pcmerge(plane1, plane2, 0.01);
-        end
-    end
-
-    methods(Access = private)
-        function [p,q] = getOrientedPointOnPlanarFace(this,model, plane)
-
-            % vecteur initial
-            v1 =[1,0,0];
-            
-            % Trouver la transformaion angulaire du plan
-            q = this.qUtils.quaternionForm2Vectors(v1, model.Normal);
-            
-            % Trouver la transformation linéaire du plan
-            p = zeros(1,3);
-            p(1) = (plane.XLimits(2)-plane.XLimits(1))/2 + plane.XLimits(1);
-            p(2) = (plane.YLimits(2)-plane.YLimits(1))/2 + plane.YLimits(1);
-            p(3) = (plane.ZLimits(2)-plane.ZLimits(1))/2 + plane.ZLimits(1);
         end
     end
 end

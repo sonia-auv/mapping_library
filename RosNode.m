@@ -24,7 +24,7 @@ classdef RosNode
             % Instances
             ptBundler = PointCloudBundler();
             ptFilter = GeneralFilter();
-            wCorner = WallCorner();
+            buoys = Buoys();
 
             while ~killNode
                 if ~ptBundler.step()
@@ -32,23 +32,23 @@ classdef RosNode
                     bundle = ptBundler.getBundle();
                     if size(bundle, 1) > 1
                         filt = ptFilter.filter(bundle);
-                        outputPose = wCorner.SegementByAtribute(filt);
+                        output = buoys.SegementByAtribute(filt);
                         
-                        rotation = quat2eul(outputPose(1:4));
-                        position = outputPose(5:7);
+%                         rotation = quat2eul(outputPose(1:4));
+%                         position = outputPose(5:7);
                         
-                        pose = rosmessage('sonia_common/AddPose',"DataFormat","struct");
-                        disp(position);
-                        pose.Position.X = position(1);
-                        pose.Position.Y = position(2);
-                        pose.Position.Z = position(3);
-                        disp(rotation);
-                        pose.Orientation.X = rotation(1);
-                        pose.Orientation.Y = rotation(2);
-                        pose.Orientation.Z = rotation(3);
-                        send(this.outputPosePublisher, pose);
-                        % pack = packagePointCloud(single(output.Location), single(output.Intensity));
-                        % send(this.outputCloudPublisher, pack);
+%                         pose = rosmessage('sonia_common/AddPose',"DataFormat","struct");
+%                         disp(position);
+%                         pose.Position.X = position(1);
+%                         pose.Position.Y = position(2);
+%                         pose.Position.Z = position(3);
+%                         disp(rotation);
+%                         pose.Orientation.X = rotation(1);
+%                         pose.Orientation.Y = rotation(2);
+%                         pose.Orientation.Z = rotation(3);
+%                         send(this.outputPosePublisher, pose);
+                        pack = packagePointCloud(single(output.Location), single(output.Intensity));
+                        send(this.outputCloudPublisher, pack);
                     end
                 else
                     % fprintf('INFO : proc mapping : Bundling or waiting. \n');
