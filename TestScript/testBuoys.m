@@ -2,8 +2,10 @@ load('ptCloud_filt.mat');
 
 filteredPT = filt;
 
-ptcloud=pcread('MA-31000.xyz');
+ptcloud=pcread('buoy.ply');
 pcshow(ptcloud)
+
+
 
 [modelCyl1, inlierIndices, outlierIndices] = pcfitcylinder(filteredPT, 0.05, [0,0,1], 4);
 cyl1 = select(filteredPT, inlierIndices);
@@ -13,25 +15,25 @@ remainCloud = select(filteredPT, outlierIndices);
 plane1 = select(remainCloud, inlierIndices1);
 remainCloud = select(remainCloud, outlierIndices1);
 
-[model2, inlierIndices2, outlierIndices2] = pcfitplane(remainCloud, 0.02, [1,0,0], 45);
-plane2 = select(remainCloud, inlierIndices2);
+% [model2, inlierIndices2, outlierIndices2] = pcfitplane(remainCloud, 0.02, [1,0,0], 45);
+% plane2 = select(remainCloud, inlierIndices2);
 
 % Extraire les point orienté
 [p1, q1] = getOrientedPointOnPlanarFace(model1, plane1);
-[p2, q2] = getOrientedPointOnPlanarFace(model2, plane2);
+% [p2, q2] = getOrientedPointOnPlanarFace(model2, plane2);
 
 figure('Name', 'Plane1');
 pcshow(plane1);
 hold on 
-pcshow(plane2);
+pcshow(filteredPT);
+% pcshow(plane2);
 
 plot(model1);
-plot(model2);
+% plot(model2);
 plot(modelCyl1);
 
 poseplot(quaternion(q1),'Position',p1);
-poseplot(quaternion(q2),'Position',p2);
-
+% poseplot(quaternion(q2),'Position',p2);
 
 function [p,q] = getOrientedPointOnPlanarFace(model, plane)
 
