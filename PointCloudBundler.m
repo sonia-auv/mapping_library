@@ -35,7 +35,7 @@ classdef PointCloudBundler < handle
             % Subscribers
             this.mStartStopSub = rossubscriber('/proc_mapping/start_stop', 'std_msgs/Bool', @this.startStopCallback, "DataFormat", "struct");
             this.mClearBundleSub = rossubscriber('/proc_mapping/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct");
-            this.mPoseSub = rossubscriber('/proc_nav/auv_pose', 'geometry_msgs/Pose', "DataFormat", "struct");    
+            this.mPoseSub = rossubscriber('/proc_nav/auv_states', 'nav_msgs/Odometry', "DataFormat", "struct");    
             this.mSonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
 
             this.mImageSub = rossubscriber('/camera_array/front/image_raw/compressed', 'sensor_msgs/CompressedImage', "DataFormat", "struct");
@@ -55,7 +55,7 @@ classdef PointCloudBundler < handle
             else
                 % Recording or waiting.
                 if this.persistentDataStore('newSonarMsg') && this.persistentDataStore('bundleStarted')
-                    this.add2PtCloud(this.mSonarSub.LatestMessage, this.mPoseSub.LatestMessage);
+                    this.add2PtCloud(this.mSonarSub.LatestMessage, this.mPoseSub.LatestMessage.Pose.Pose);
                     this.persistentDataStore('newSonarMsg', false);                  
                 end
             end
@@ -92,20 +92,16 @@ classdef PointCloudBundler < handle
             quat(2) = poseMsg.Orientation.X;
             quat(3) = poseMsg.Orientation.Y;
             quat(4) = poseMsg.Orientation.Z;
+            %fix
+            quat = quatinv(quat);
             
             xyzi = zeros(sonarMsg.Width, 4);
             xyzi(:, 1:3) = rosReadXYZ(sonarMsg);
             
-            % Temporary swap.
-%             v = xyzi(:, 1);
-%             xyzi(:, 1) = xyzi(:, 2);
-%             xyzi(:, 2) = v;
 
             xyzi(:, 4) = rosReadField(sonarMsg, 'intensity');
 
             xyzi = this.mPreprocessing.filter(xyzi);
-%             rowsToDelete = any(xyzi(:,4) < 0.07 | sqrt(xyzi(:,1).^2+xyzi(:,2).^2+xyzi(:,3).^2) > 0.1, 2);
-%             xyzi(rowsToDelete, :) = [];
 
             for i=1:size(xyzi, 1)
                 point = sonar2NED(pos.', quat, [0.358, 0, -0.118].', [xyzi(i,1), xyzi(i,2), 0]).'; 

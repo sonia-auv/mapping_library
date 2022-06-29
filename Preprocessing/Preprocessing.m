@@ -8,12 +8,6 @@ classdef Preprocessing  < handle
         minRangeSub;
         maxRangeSub;
 
-%         % State
-%         minIntensityState;
-%         maxIntensityState;
-%         minRangeState;
-%         maxRangeState;
-
         % Condition value
         minIntensity;
         maxIntensity;
@@ -24,18 +18,6 @@ classdef Preprocessing  < handle
     methods
         %% Preprocessing Constructor
         function this = Preprocessing()   
-
-            % General preprocessing value
-%             this.minIntensityState = true;
-%             this.maxIntensityState = false;
-%             this.minRangeState = true;
-%             this.maxRangeState = false;
-
-%             this.minIntensity = 0.07;
-%             this.maxIntensity = 1;
-%             this.minRange = 0.1;
-%             this.maxRange = 100;
-            
             % Subscribers
 
             this.minIntensitySub = rossubscriber('/proc_mapping/preprocessing/minIntensity', 'std_msgs/Float32', @this.minIntensityCallback, "DataFormat", "struct");
@@ -93,7 +75,7 @@ classdef Preprocessing  < handle
     
             % Initial variables
             if isempty(minIntensityValue)
-                minIntensityValue = 0.07;
+                minIntensityValue = 0.1;
 %                 minIntensityState = false;
             end
             if isempty(maxIntensityValue)
@@ -105,7 +87,7 @@ classdef Preprocessing  < handle
 %                 minRangeState = false;
             end
             if isempty(maxRangeValue)
-                maxRangeValue = 100.0;
+                maxRangeValue = 5.0;
 %                 maxRangeState = false;
             end
     
