@@ -30,6 +30,8 @@ classdef RosNode
                     fprintf('INFO : proc mapping : Not bundling. \n');
                     bundle = ptBundler.getBundle();
                     if size(bundle, 1) > 1
+
+                        % Create and filter pointcloud form bundle
                         filt = ptFilter.filter(bundle);
                         
                         buoys = Buoys(filt);

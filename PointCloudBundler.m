@@ -20,6 +20,7 @@ classdef PointCloudBundler < handle
         % State
         mLastBundleState;
         mBundleState;
+        
     end
     
     methods
@@ -75,6 +76,20 @@ classdef PointCloudBundler < handle
             return;
         end
 
+        %% Getters / Setters
+        function out = getBundle(this, lin, col)
+            if nargin == 1
+                out = this.mBundle;
+            elseif nargin == 3
+                out = this.mBundle(lin, col);
+            end
+        end
+    end
+
+    %==============================================================================================
+    % Privates functions
+    %==============================================================================================
+    methods(Access = private)
         %% Adding to the point cloud.
         function add2PtCloud(this, sonarMsg, poseMsg)
             fprintf('INFO : proc mapping : Append to point cloud. \n');
@@ -109,14 +124,6 @@ classdef PointCloudBundler < handle
             end
             if coder.target('MATLAB')
                 ptCloud = pointCloud(xyzi(:, 1:3), 'Intensity', xyzi(:, 4));
-                % ptCloud with image.
-                % Getting the image.
-%                 im = rosReadImage(this.mImageSub.LatestMessage);
-%                 % Camera parameters.
-%                 intrinsics = cameraIntrinsics(focalLength, principalPoint, imageSize)
-%                 % Transformation from camera to sonar.
-%                 transform = rigid3d([1, 0, 0; 0, 1, 0; 0, 0, 1], [0, 0, 0]);
-%                 ptCloudOut = fuseCameraToLidar(im, ptCloud, intrinsics, transform);
 
                 this.mBigCloud = pcmerge(this.mBigCloud, ptCloud, 0.01);
                 view(this.mPlayer, this.mBigCloud);
@@ -124,17 +131,11 @@ classdef PointCloudBundler < handle
             this.mBundle = [this.mBundle; xyzi];
         end
         
-        %% Getters / Setters
-        function out = getBundle(this, lin, col)
-            if nargin == 1
-                out = this.mBundle;
-            elseif nargin == 3
-                out = this.mBundle(lin, col);
-            end
-        end
+        
     end
-
+    %==============================================================================================
     %% ROS Callbacks
+    %==============================================================================================
     methods(Static, Access = private)
         function sonarCallback(src, msg)
             PointCloudBundler.persistentDataStore('newSonarMsg', true);
