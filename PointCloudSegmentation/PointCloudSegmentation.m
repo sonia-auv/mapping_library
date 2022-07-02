@@ -3,20 +3,24 @@ classdef PointCloudSegmentation
     %   Detailed explanation goes here
     
     properties (Access = protected)
-        qUtils;
+        qUtils; % quaternion Utilities
+        filteredPT; % filter point cloud
+
     end
 
     methods (Access = public )
         
-        function this = PointCloudSegmentation()
+        function this = PointCloudSegmentation(filterPT)
             this.qUtils = quatUtilities();
+            this.filteredPT = filterPT;
+
         end
       
     end
     
     methods (Abstract, Access = public )
         
-        feature = SegementByAtribute(this,filteredPT);
+        feature = SegementByAtribute(this);
       
     end
 
@@ -34,6 +38,20 @@ classdef PointCloudSegmentation
             p(1) = (plane.XLimits(2)-plane.XLimits(1))/2 + plane.XLimits(1);
             p(2) = (plane.YLimits(2)-plane.YLimits(1))/2 + plane.YLimits(1);
             p(3) = (plane.ZLimits(2)-plane.ZLimits(1))/2 + plane.ZLimits(1);
+        end
+
+        function  box = objectAllignBoudingBox(this,q, pc,model)
+
+            tRot = quat2rotm(q);
+            tf = rigid3d(tRot, [0 0 0]);
+            pct = pctransform(pc, tf);
+            
+            box = zeros(1,3);
+            box(1) = (pct.XLimits(2)-pct.XLimits(1));
+            box(2) = (pct.YLimits(2)-pct.YLimits(1));
+            box(3) = (pct.ZLimits(2)-pct.ZLimits(1));
+            
+        
         end
     end
 end

@@ -84,7 +84,7 @@ switch sum(goodCluster)
              buoyTformed = pctransform(buoy, icpTrans);
              pcshow(buoyTformed)
 
-             poseplot(quaternion(rotm2quat(icpTrans.Rotation.')),'Position',icpTrans.Translation,ScaleFactor=0.1);
+             poseplot(quaternion(rotm2quat(icpTrans.Rotation.')),'Position',icpTrans.Translation,ScaleFactor=0.2);
 
         end
     otherwise
