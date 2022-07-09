@@ -11,7 +11,8 @@ classdef PointCloudBundler < handle
         mPreprocessing;
 
         % Subscribers
-        mStartStopSub;
+        mStartSub;
+        mStopSub;
         mClearBundleSub;
         mPoseSub;
         mSonarSub;
@@ -37,7 +38,8 @@ classdef PointCloudBundler < handle
             this.mBundle = zeros(1, 4);
 
             % Subscribers
-            this.mStartStopSub = rossubscriber('/proc_mapping/start_stop', 'std_msgs/Bool', @this.startStopCallback, "DataFormat", "struct");
+            this.mStartSub = rossubscriber('/proc_mapping/start', 'std_msgs/UInt8', @this.startCallback, "DataFormat", "struct");
+            this.mStopSub = rossubscriber('/proc_mapping/stop', 'std_msgs/Bool', @this.stopCallback, "DataFormat", "struct");
             this.mClearBundleSub = rossubscriber('/proc_mapping/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct");
             this.mPoseSub = rossubscriber('/proc_nav/auv_states', 'nav_msgs/Odometry', "DataFormat", "struct");    
             this.mSonarSub = rossubscriber('/provider_sonar/point_cloud2', 'sensor_msgs/PointCloud2', @this.sonarCallback, "DataFormat", "struct");
@@ -151,13 +153,14 @@ classdef PointCloudBundler < handle
             PointCloudBundler.persistentDataStore('newSonarMsg', true);
         end
 
-        function startStopCallback(src, msg)
-            PointCloudBundler.persistentDataStore('bundleStarted', msg.Data);
-            if PointCloudBundler.persistentDataStore('bundleStarted')
-                fprintf('INFO : proc mapping : Bundle record started \n');
-            else
-                fprintf('INFO : proc mapping : Bundle record stopped \n');
-            end
+        function startCallback(src, msg)
+            PointCloudBundler.persistentDataStore('bundleStarted', true);
+            fprintf('INFO : proc mapping : Bundle record started \n');
+        end
+
+        function stopCallback(src, msg)
+            PointCloudBundler.persistentDataStore('bundleStarted', false);
+            fprintf('INFO : proc mapping : Bundle record stopped \n');
         end
 
         function clearBundleCallback(src, msg)
