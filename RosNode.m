@@ -41,7 +41,6 @@ classdef RosNode
             
             % Instances
             this.mPtBundler = PointCloudBundler(this.param);
-            ptFilter = GeneralFilter();
 
             while ~killNode
                 if ~this.mPtBundler.step()
@@ -50,6 +49,7 @@ classdef RosNode
                     if size(bundle, 1) > 1
 
                         % Create and filter pointcloud form bundle
+                        ptFilter = GeneralFilter(this.param.filter.general);
                         filt = ptFilter.filter(bundle);
                         
                         buoys = Buoys(filt, this.param.segmentation.buoys);
@@ -82,6 +82,10 @@ classdef RosNode
             param.preprocessing.minRange = 0.1;
             param.preprocessing.maxRange = 5.0;
 
+            % Filter
+            % General
+            param.filter.general.boxSize = 0.05;
+
             % Segmentation
             % Buoys
             param.segmentation.buoys.clusterDist = 0.4;
@@ -99,6 +103,10 @@ classdef RosNode
             param.preprocessing.maxIntensity = rosparams.getValue('/proc_mapping/preprocessing/max_intensity', param.preprocessing.maxIntensity);
             param.preprocessing.minRange = rosparams.getValue('/proc_mapping/preprocessing/min_range', param.preprocessing.minRange);
             param.preprocessing.maxRange = rosparams.getValue('/proc_mapping/preprocessing/max_range', param.preprocessing.maxRange);
+
+            % Filter
+            % General
+            param.filter.general.boxSize = rosparams.getValue('/proc_mapping/filter/general/box_size', param.filter.general.boxSize);
 
             % Segmentation
             % Buoys

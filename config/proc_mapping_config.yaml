@@ -8,6 +8,10 @@ proc_mapping:
     min_range: 0.1         # m
     max_range: 5.0         # m
 
+  filter:
+    general:
+      box_size: 0.05       # m 
+
   # Segmentation
   segmentation:
     buoys:
