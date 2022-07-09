@@ -12,6 +12,6 @@ function proc_mapping
     rosSpin = 20;
     r = rosrate(rosSpin);   
     % Proc_mapping startup
-    rosNode = RosNode();
+    rosNode = RosNode(rosSpin);
     rosNode.spin(r);
 end

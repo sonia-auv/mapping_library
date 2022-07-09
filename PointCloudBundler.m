@@ -20,12 +20,15 @@ classdef PointCloudBundler < handle
         % State
         mLastBundleState;
         mBundleState;
-        
+
+        % ROS params
+        param;   
     end
     
     methods
         %% PointCloudBundler Constructor
-        function this = PointCloudBundler()   
+        function this = PointCloudBundler(param)  
+            % Graphics functions 
             if coder.target('MATLAB')
                 this.mBigCloud = pointCloud(zeros([1, 3]), 'Intensity', 0);
                 this.mPlayer = pcplayer([-20 20],[-20 20],[0 5], 'VerticalAxisDir','Down');
@@ -42,9 +45,13 @@ classdef PointCloudBundler < handle
             this.mImageSub = rossubscriber('/camera_array/front/image_raw/compressed', 'sensor_msgs/CompressedImage', "DataFormat", "struct");
 
             this.mLastBundleState = false;
+            
+            % ROS params
+            this.param = param;
 
-            this.mPreprocessing = Preprocessing();
+            this.mPreprocessing = Preprocessing(this.param.preprocessing);
         end
+
         %% Step function
         function out = step(this)
             % Verifiy if we just stop the record.
@@ -83,6 +90,11 @@ classdef PointCloudBundler < handle
             elseif nargin == 3
                 out = this.mBundle(lin, col);
             end
+        end
+
+        function setParam(this, param)
+            this.param = param;
+            this.mPreprocessing.setParam(this.param.preprocessing);
         end
     end
 
@@ -129,9 +141,7 @@ classdef PointCloudBundler < handle
                 view(this.mPlayer, this.mBigCloud);
             end
             this.mBundle = [this.mBundle; xyzi];
-        end
-        
-        
+        end     
     end
     %==============================================================================================
     %% ROS Callbacks

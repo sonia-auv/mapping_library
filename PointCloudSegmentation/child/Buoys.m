@@ -2,30 +2,23 @@ classdef Buoys < PointCloudSegmentation
     % WALLCORNER Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties (Access = private)
-        % segmentation parameters
-        clusterDist = 0.4;
-        planeTol = 0.02;
-        icpInlierRation = 0.1;
-
-        %preselect parameters;
-        zNormalThres = 0.2;
-        inPlaneThres = 0.40;
-        areaThres = [0.6 2.5];
-
-        
+    properties (Access = private)        
         PTlabels;
         buoyPT;
+
+        % ROS Parameters.
+        param;
     end
     %==============================================================================================
     % Public functions
     %==============================================================================================   
     methods
-        function this = Buoys(filterPT)
+        function this = Buoys(filterPT, param)
             %WALLCORNER Construct an instance of this class
             %   Detailed explanation goes here
             this@PointCloudSegmentation(filterPT);
-
+            
+            this.param = param;
             
             this.PTlabels = uint32(zeros(1,this.filteredPT.Count));
 
@@ -47,7 +40,7 @@ classdef Buoys < PointCloudSegmentation
         function feature = SegementByAtribute(this)
             
             % Get clusters
-            [this.PTlabels,numClusters] = pcsegdist(this.filteredPT,this.clusterDist);
+            [this.PTlabels,numClusters] = pcsegdist(this.filteredPT,this.param.clusterDist);
             goodCluster = zeros(1, numClusters);
 
             for i =1  : numClusters
@@ -93,7 +86,7 @@ classdef Buoys < PointCloudSegmentation
             clusterPT = select(this.filteredPT,clusterLabels);
     
             % fit plane on cluster
-            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.planeTol );
+            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol );
     
             plane =  select(clusterPT, indexOnPlane);
     
@@ -113,9 +106,9 @@ classdef Buoys < PointCloudSegmentation
             area = box(2)*box(3);
     
             % Check if cluster is a potential buoys
-            if (zNormal < this.zNormalThres...
-                && percentInPlane > this.inPlaneThres...
-                && area > this.areaThres(1) && area < this.areaThres(2))
+            if (zNormal < this.param.zNormalThres...
+                && percentInPlane > this.param.inPlaneThres...
+                && area > this.param.minArea && area < this.param.maxArea)
         
                 isPotential = 1;
             else
@@ -128,7 +121,7 @@ classdef Buoys < PointCloudSegmentation
         function [p,q] = getBuoyPose(this, subPT)
             
             % Apply ransac 
-            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.planeTol );
+            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol );
             plane =  select(subPT, indexOnPlane);
             
             % Get ransac plane pose approximation 
@@ -139,7 +132,7 @@ classdef Buoys < PointCloudSegmentation
             buoyTformed = pctransform(this.buoyPT, tformRansac );
                        
             % Apply icp.
-            tformICP = pcregistericp(buoyTformed , plane,"InlierRatio",this.icpInlierRation);
+            tformICP = pcregistericp(buoyTformed , plane,"InlierRatio",this.param.icpInlierRatio);
 
             % Get buoys transformation.
             tformBuoy = rigid3d(tformRansac.T * tformICP.T);
