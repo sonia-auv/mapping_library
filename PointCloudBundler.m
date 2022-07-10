@@ -38,7 +38,7 @@ classdef PointCloudBundler < handle
             this.mBundle = zeros(1, 4);
 
             % Subscribers
-            this.mStartSub = rossubscriber('/proc_mapping/start', 'std_msgs/UInt8', @this.startCallback, "DataFormat", "struct");
+            this.mStartSub = rossubscriber('/proc_mapping/start', 'std_msgs/String', @this.startCallback, "DataFormat", "struct");
             this.mStopSub = rossubscriber('/proc_mapping/stop', 'std_msgs/Bool', @this.stopCallback, "DataFormat", "struct");
             this.mClearBundleSub = rossubscriber('/proc_mapping/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct");
             this.mPoseSub = rossubscriber('/proc_nav/auv_states', 'nav_msgs/Odometry', "DataFormat", "struct");    
@@ -91,6 +91,27 @@ classdef PointCloudBundler < handle
                 out = this.mBundle;
             elseif nargin == 3
                 out = this.mBundle(lin, col);
+            end
+        end
+
+        function out = getBundleName(this)
+            out = '';
+            if ~isempty(this.mStartSub.LatestMessage)
+                out = this.mStartSub.LatestMessage.Data;
+            end
+        end
+
+        function [p, q] = getLastSubPose(this)
+            p = zeros(1, 3);
+            q = zeros(1, 4);
+            if ~isempty(this.mPoseSub.LatestMessage)
+                p = [this.mPoseSub.LatestMessage.Pose.Pose.Position.X, ...
+                     this.mPoseSub.LatestMessage.Pose.Pose.Position.Y, ...
+                     this.mPoseSub.LatestMessage.Pose.Pose.Position.Z];
+                q = [this.mPoseSub.LatestMessage.Pose.Pose.Orientation.W, ...
+                    this.mPoseSub.LatestMessage.Pose.Pose.Orientation.X, ...
+                    this.mPoseSub.LatestMessage.Pose.Pose.Orientation.Y, ...
+                    this.mPoseSub.LatestMessage.Pose.Pose.Orientation.Z];
             end
         end
 

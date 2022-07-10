@@ -5,7 +5,7 @@ classdef RosNode
     properties (Access = private)
         % ROS Publishers
         outputCloudPublisher;
-        outputPosePublisher;
+        obstacleArrayPublisher;
 
         % ROS parameters
         param;
@@ -15,6 +15,8 @@ classdef RosNode
         paramUpdateRate;
         counter;
         rate;
+
+        obstacleArray;
     end
     
     methods
@@ -22,14 +24,18 @@ classdef RosNode
         function this = RosNode(rate)
             % ROS Publishers
             this.outputCloudPublisher = rospublisher("/proc_mapping/output","sensor_msgs/PointCloud2","DataFormat","struct");
-            this.outputPosePublisher = rospublisher("/proc_mapping/output_pose","sonia_common/AddPose","DataFormat","struct");
+            this.obstacleArrayPublisher = rospublisher("/proc_mapping/obstacle_infos","sonia_common/ObstacleArray","DataFormat","struct");
+
+            obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
+            this.obstacleArray =  rosmessage("sonia_common/ObstacleArray", "DataFormat", "struct");
+            this.obstacleArray.Obstacles = repelem(obstacle, 10).';
 
             % ROS parameters
             this.param = this.getRosParams();
             
             this.paramUpdateRate = 2; % seconds
             this.counter = 0;
-            this.rate = rate
+            this.rate = rate;
         end
         
         %% ROS Spinfilt
@@ -51,12 +57,13 @@ classdef RosNode
                         % Create and filter pointcloud form bundle
                         ptFilter = GeneralFilter(this.param.filter.general);
                         filt = ptFilter.filter(bundle);
-                        
-                        buoys = Buoys(filt, this.param.segmentation.buoys);
-                        output = buoys.SegementByAtribute();
-                        
-                        %pack = packagePointCloud(single(output.Location), single(output.Intensity));
-                        %send(this.outputCloudPublisher, pack);
+                        switch upper(this.mPtBundler.getBundleName())
+                            case 'BUOYS'
+                                buoys = Buoys(filt, this.param.segmentation.buoys);
+                                [~, quat] = this.mPtBundler.getLastSubPose();
+                                this.obstacleArray.Obstacles(1:2) = buoys.SegementByAtribute(quat);
+                                send(this.obstacleArrayPublisher, this.obstacleArray);
+                        end
                     end
                 else
                     % fprintf('INFO : proc mapping : Bundling or waiting. \n');

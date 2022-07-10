@@ -20,7 +20,7 @@ classdef PointCloudSegmentation
     
     methods (Abstract, Access = public )
         
-        feature = SegementByAtribute(this);
+        feature = SegementByAtribute(this, quat);
       
     end
 
@@ -52,6 +52,14 @@ classdef PointCloudSegmentation
             box(3) = (pct.ZLimits(2)-pct.ZLimits(1));
             
         
+        end
+
+        function qFlip = isObstaclePoseFlipped(this, obsQuat, auvQuat)
+            qFlip = obsQuat;
+            angle = abs(this.qUtils.angleBetween2Quaternion(obsQuat, auvQuat));
+            if angle > pi / 2
+                qFlip = quatmultiply(obsQuat, eul2quat([pi 0 0], "ZYX"));
+            end
         end
     end
 end

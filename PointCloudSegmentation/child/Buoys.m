@@ -1,5 +1,5 @@
 classdef Buoys < PointCloudSegmentation
-    % WALLCORNER Summary of this class goes here
+    % BUOYS Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = private)        
@@ -14,7 +14,7 @@ classdef Buoys < PointCloudSegmentation
     %==============================================================================================   
     methods
         function this = Buoys(filterPT, param)
-            %WALLCORNER Construct an instance of this class
+            % BUOYS Construct an instance of this class
             %   Detailed explanation goes here
             this@PointCloudSegmentation(filterPT);
             
@@ -37,40 +37,72 @@ classdef Buoys < PointCloudSegmentation
 
         end
         
-        function feature = SegementByAtribute(this)
-            
+        function feature = SegementByAtribute(this, auvQuat)            
             % Get clusters
             [this.PTlabels,numClusters] = pcsegdist(this.filteredPT,this.param.clusterDist);
             goodCluster = zeros(1, numClusters);
 
+            obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
+            feature = repelem(obstacle, 2);
+
             for i =1  : numClusters
-
                 goodCluster(i) = this.analyseCluster(i);
-
             end
+            sum(goodCluster)
 
             switch sum(goodCluster)
-
                 % Suspect 2 buyos in the same clusters
                 case 1
-                    % get the good cluster
                     index = find(goodCluster == 1);
+                    % get the good cluster
                     clusterLabels = this.PTlabels == index;
                     clusterPT =  select(this.filteredPT, clusterLabels);
                     
                     % split cluster with kmeans
                     kmeansIndex = kmeans(clusterPT.Location, 2);
-                                    
-                    %for each buoys
-                    for i = 1 : 2 
-                        
-                        [p,q] = this.getBuoyPose(select(clusterPT, kmeansIndex == i));
-            
+
+                    % for each buoys
+                    for i = 1 : 2
+                        [p, q] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
+                        obstacle.IsValid = true;
+                        obstacle.Name = char('Buoys');
+                        obstacle.Confidence = single(100.0);
+                        obstacle.Pose.Position.X = p(1);
+                        obstacle.Pose.Position.Y = p(2);
+                        obstacle.Pose.Position.Z = p(3);
+                        obstacle.Pose.Orientation.W = q(1);
+                        obstacle.Pose.Orientation.X = q(2);
+                        obstacle.Pose.Orientation.Y = q(3);
+                        obstacle.Pose.Orientation.Z = q(4);
+                        feature(i) = obstacle;
                     end
 
+                case 2
+                    index = find(goodCluster == 1);
+                    % for each buoys
+                    for i = 1 : 2
+                        clusterLabels = this.PTlabels == index(i);
+                        [p, q] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
+                        obstacle.IsValid = true;
+                        obstacle.Name = char('Buoys');
+                        obstacle.Confidence = single(100.0);
+                        obstacle.Pose.Position.X = p(1);
+                        obstacle.Pose.Position.Y = p(2);
+                        obstacle.Pose.Position.Z = p(3);
+                        obstacle.Pose.Orientation.W = q(1);
+                        obstacle.Pose.Orientation.X = q(2);
+                        obstacle.Pose.Orientation.Y = q(3);
+                        obstacle.Pose.Orientation.Z = q(4);
+                        feature(i) = obstacle;
+                    end
+
+                % Nothing found
                 otherwise
-            end
-            feature = true; 
+                    for i = 1 : 2
+                        feature(i).IsValid = false;
+                    end
+                    return
+            end 
         end
     end
 
@@ -118,7 +150,7 @@ classdef Buoys < PointCloudSegmentation
 
         end
 
-        function [p,q] = getBuoyPose(this, subPT)
+        function [p,q] = getBuoyPose(this, subPT, auvQuat)
             
             % Apply ransac 
             [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol );
@@ -139,12 +171,12 @@ classdef Buoys < PointCloudSegmentation
             
             % return transform
             p = tformBuoy.Translation;
-            q = rotm2quat(tformBuoy .Rotation.');
+            q = this.isObstaclePoseFlipped(rotm2quat(tformBuoy .Rotation.'), auvQuat);
 
             if coder.target('MATLAB')
                 pcshow(buoyTformed)
                 hold on 
-                poseplot(quaternion(rotm2quat(tformBuoy.Rotation.')),'Position',tformBuoy.Translation,ScaleFactor=0.2);
+                poseplot(quaternion(q),'Position',p,ScaleFactor=0.2);
             end
         
 
