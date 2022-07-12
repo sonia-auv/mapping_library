@@ -22,3 +22,13 @@ proc_mapping:
       in_plane_thres: 0.4
       min_area: 0.6
       max_area: 3.5
+
+  # Parameters
+  parameters:
+    hydro:
+      pinger_depth: 5.0
+    sonar:
+      translation:
+        x: 0.358
+        y: 0
+        z: -0.118

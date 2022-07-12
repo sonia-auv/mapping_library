@@ -10,7 +10,9 @@ classdef RosNode
         % ROS parameters
         param;
 
+        % Bundlers
         mPtBundler;
+        mScBundler;
 
         paramUpdateRate;
         counter;
@@ -43,20 +45,20 @@ classdef RosNode
             killNode = false;
             reset(spin);
             fprintf('INFO : proc mapping : Node is started. \n');
-            fprintf('INFO : proc mapping : Wait for point cloud. \n');
             
             % Instances
             this.mPtBundler = PointCloudBundler(this.param);
+            this.mScBundler = SoundCloudBundler(this.param);
 
             while ~killNode
+                % PointCloud Bundler
                 if ~this.mPtBundler.step()
-                    fprintf('INFO : proc mapping : Not bundling. \n');
                     bundle = this.mPtBundler.getBundle();
                     if size(bundle, 1) > 1
-
-                        % Create and filter pointcloud form bundle
+                        % Create and filter pointcloud from bundle
                         ptFilter = GeneralFilter(this.param.filter.general);
                         filt = ptFilter.filter(bundle);
+                        % Prepare and send the result message for this bundle.
                         switch upper(this.mPtBundler.getBundleName())
                             case 'BUOYS'
                                 buoys = Buoys(filt, this.param.segmentation.buoys);
@@ -66,9 +68,17 @@ classdef RosNode
                         end
                     end
                 else
-                    % fprintf('INFO : proc mapping : Bundling or waiting. \n');
+                    % fprintf('INFO : proc mapping : sonar : Bundling or waiting. \n');
                 end
 
+                % SoundCloud Bundler
+                if ~this.mScBundler.step()
+
+                else
+                    % fprintf('INFO : proc mapping : hydro : Bundling or waiting. \n');
+                end
+
+                % Update ROS parameters
                 this.counter = this.counter + 1;
                 if this.counter >= this.rate * this.paramUpdateRate
                     this.counter = 0;
@@ -103,6 +113,15 @@ classdef RosNode
             param.segmentation.buoys.minArea = 0.6;
             param.segmentation.buoys.maxArea = 2.5;
 
+            % Parameters
+            % Hydro
+            param.parameters.hydro.pingerDepth = 5.0;
+
+            % Sonar
+            param.parameters.sonar.translation.x = 0.358;
+            param.parameters.sonar.translation.y = 0;
+            param.parameters.sonar.translation.z = -0.118;
+
             rosparams = RosparamClass(rosparam);
             
             % Preprocessing
@@ -124,6 +143,15 @@ classdef RosNode
             param.segmentation.buoys.inPlaneThres = rosparams.getValue('/proc_mapping/segmentation/buoys/in_plane_thres', param.segmentation.buoys.inPlaneThres);
             param.segmentation.buoys.minArea = rosparams.getValue('/proc_mapping/segmentation/buoys/min_area', param.segmentation.buoys.minArea);
             param.segmentation.buoys.maxArea = rosparams.getValue('/proc_mapping/segmentation/buoys/max_area', param.segmentation.buoys.maxArea);
+
+            % Parameters
+            % Hydro
+            param.parameters.hydro.pingerDepth = rosparams.getValue('/proc_mapping/parameters/hydro/pinger_depth', param.parameters.hydro.pingerDepth);
+
+            % Sonar
+            param.parameters.sonar.translation.x = rosparams.getValue('/proc_mapping/parameters/sonar/translation/x', param.parameters.sonar.translation.x);
+            param.parameters.sonar.translation.y = rosparams.getValue('/proc_mapping/parameters/sonar/translation/y', param.parameters.sonar.translation.y);
+            param.parameters.sonar.translation.z = rosparams.getValue('/proc_mapping/parameters/sonar/translation/z', param.parameters.sonar.translation.z);
         end
     end
 end

@@ -48,7 +48,6 @@ classdef Buoys < PointCloudSegmentation
             for i =1  : numClusters
                 goodCluster(i) = this.analyseCluster(i);
             end
-            sum(goodCluster)
 
             switch sum(goodCluster)
                 % Suspect 2 buyos in the same clusters
@@ -63,7 +62,7 @@ classdef Buoys < PointCloudSegmentation
 
                     % for each buoys
                     for i = 1 : 2
-                        [p, q] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
+                        [p, q] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat);
                         obstacle.IsValid = true;
                         obstacle.Name = char('Buoys');
                         obstacle.Confidence = single(100.0);
