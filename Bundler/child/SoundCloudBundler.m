@@ -15,7 +15,7 @@ classdef SoundCloudBundler < Bundler
             this.mBundle = zeros(1, 4);
 
             % Subscribers
-            this.mHydroSub = rossubscriber('/proc_simulation/ping', 'sonia_common/PingMsg', @this.hydroCallback, "DataFormat", "struct");
+            this.mHydroSub = rossubscriber('/proc_simulation/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
             this.mStartSub = rossubscriber('/proc_mapping/hydro/start', 'std_msgs/Bool', @this.startCallback, "DataFormat", "struct");
             this.mStopSub = rossubscriber('/proc_mapping/hydro/stop', 'std_msgs/Bool', @this.stopCallback, "DataFormat", "struct");
             this.mClearBundleSub = rossubscriber('/proc_mapping/hydro/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct");   
@@ -49,6 +49,8 @@ classdef SoundCloudBundler < Bundler
             out = true;
             return;
         end
+
+
     end
 
     %==============================================================================================
@@ -72,10 +74,12 @@ classdef SoundCloudBundler < Bundler
             quat(2) = poseMsg.Orientation.X;
             quat(3) = poseMsg.Orientation.Y;
             quat(4) = poseMsg.Orientation.Z;
+
             %fix
             quat = quatinv(quat);
             
             xyzi = zeros(1, 4);
+            xyzi(1:3) = this.hydroAngle2Cartesian(this.mHydroSub.Heading, this.mHydroSub.Elevation);
             xyzi(4) = 1; % Fake intensity
 
             point = sonar2NED(pos.', quat, [0.358, 0, -0.118].', [xyzi(1,1), xyzi(1,2), 0]).'; 
@@ -88,8 +92,19 @@ classdef SoundCloudBundler < Bundler
                 view(this.mPlayer, this.mBigCloud);
             end
             this.mBundle = [this.mBundle; xyzi];
-        end     
+        end  
+        
+        function pose = hydroAngle2Cartesian(phi, theta)
+            z = this.param.parameters.hydro.pingerDepth
+            rho = z / cos(theta);
+
+
+            pose = [rho *cos(phi)*sin(theta);
+                    rho * sin(phi) * sin(theta);
+                    z];
+        end
     end
+    
     %==============================================================================================
     %% ROS Callbacks
     %==============================================================================================
