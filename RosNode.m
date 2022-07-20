@@ -59,9 +59,18 @@ classdef RosNode
 %                         idx = floor(0.4 * size(bundle, 1));
 %                         bundle = bundle(idx:end, :);
 %                         test = pointCloud(bundle(:, 1:3), 'Intensity', bundle(:, 4));
-                        % Create and filter pointcloud form bundle
+                        
+
+                    % Create and filter pointcloud form bundle
+                        % Histogram filter
+                         histFilter = HistogramFilter(this.param.filter.histogram_filter);
+                         bundle = histFilter.filter(bundle,4, true); % 3e arg : optional bool debug graph default = false
+
+                        % General filter
                         ptFilter = GeneralFilter(this.param.filter.general);
                         filt = ptFilter.filter(bundle);
+
+                        
                         switch upper(this.mPtBundler.getBundleName())
                             case 'BUOYS'
                                 buoys = Buoys(filt, this.param.segmentation.buoys);
@@ -97,6 +106,9 @@ classdef RosNode
             % Filter
             % General
             param.filter.general.boxSize = 0.05;
+            % Histogram
+            param.filter.histogram_filter.nBin = 100;
+            param.filter.histogram_filter.nBinsToFilterOut = 10;
 
             % Segmentation
             % Buoys
@@ -119,6 +131,9 @@ classdef RosNode
             % Filter
             % General
             param.filter.general.boxSize = rosparams.getValue('/proc_mapping/filter/general/box_size', param.filter.general.boxSize);
+            % Histogram
+            param.filter.histogram_filter.nBin = rosparams.getValue('/proc_mapping/filter/histogram_filter/nBin', param.filter.histogram_filter.nBin);
+            param.filter.histogram_filter.nBinsToFilterOut = rosparams.getValue('/proc_mapping/filter/histogram_filter/nBinsToFilterOut', param.filter.histogram_filter.nBinsToFilterOut);
 
             % Segmentation
             % Buoys
