@@ -57,7 +57,7 @@ classdef PointCloudSegmentation
         function qFlip = isObstaclePoseFlipped(this, obsQuat, auvQuat)
             qFlip = obsQuat;
             angle = abs(this.qUtils.angleBetween2Quaternion(obsQuat, auvQuat));
-            if angle > pi / 2
+            if min(2*pi - angle, angle) > pi / 2
                 qFlip = quatmultiply(obsQuat, eul2quat([pi 0 0], "ZYX"));
             end
         end

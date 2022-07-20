@@ -53,7 +53,12 @@ classdef RosNode
                     fprintf('INFO : proc mapping : Not bundling. \n');
                     bundle = this.mPtBundler.getBundle();
                     if size(bundle, 1) > 1
-
+%                         hist = histogram(bundle(:,4),100);
+%                         bundle = select(bundle(:,4) > hist.edges(10));
+%                         bundle = sort(bundle, 4);
+%                         idx = floor(0.4 * size(bundle, 1));
+%                         bundle = bundle(idx:end, :);
+%                         test = pointCloud(bundle(:, 1:3), 'Intensity', bundle(:, 4));
                         % Create and filter pointcloud form bundle
                         ptFilter = GeneralFilter(this.param.filter.general);
                         filt = ptFilter.filter(bundle);
@@ -84,7 +89,7 @@ classdef RosNode
     methods (Access = private)
         function param = getRosParams(this)
             % Preprocessing
-            param.preprocessing.minIntensity = 0.1;
+            param.preprocessing.minIntensity = 0.01;
             param.preprocessing.maxIntensity = 1.0;
             param.preprocessing.minRange = 0.1;
             param.preprocessing.maxRange = 5.0;
@@ -96,7 +101,7 @@ classdef RosNode
             % Segmentation
             % Buoys
             param.segmentation.buoys.clusterDist = 0.4;
-            param.segmentation.buoys.planeTol = 0.02;
+            param.segmentation.buoys.planeTol = 0.05;
             param.segmentation.buoys.icpInlierRatio = 0.1;
             param.segmentation.buoys.zNormalThres = 0.2;
             param.segmentation.buoys.inPlaneThres = 0.4;

@@ -3,9 +3,9 @@
 proc_mapping:
   # Preprocessing
   preprocessing:
-    min_intensity: 0.1
+    min_intensity: 0.18
     max_intensity: 1.0
-    min_range: 0.1         # m
+    min_range: 0.1      # m
     max_range: 10.0         # m
 
   filter:
@@ -16,9 +16,9 @@ proc_mapping:
   segmentation:
     buoys:
       cluster_dist: 0.4
-      plane_tol: 0.05
+      plane_tol: 0.1
       icp_inlier_ratio: 0.1
-      z_normal_thres: 0.2
-      in_plane_thres: 0.4
+      z_normal_thres: 0.3
+      in_plane_thres: 0.5
       min_area: 0.6
-      max_area: 3.5
+      max_area: 4.5

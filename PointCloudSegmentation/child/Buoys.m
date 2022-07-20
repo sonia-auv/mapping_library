@@ -100,6 +100,7 @@ classdef Buoys < PointCloudSegmentation
                 otherwise
                     for i = 1 : 2
                         feature(i).IsValid = false;
+
                     end
                     return
             end 
@@ -116,11 +117,19 @@ classdef Buoys < PointCloudSegmentation
             % extract pointCloud
             clusterLabels = this.PTlabels == i;
             clusterPT = select(this.filteredPT,clusterLabels);
+
+            % Test fit cylinder
+%             [modelCyl, indexOnCyl, outlierIndexCyl] = pcfitcylinder(clusterPT, 0.01 );
+%             rest =  select(clusterPT, outlierIndexCyl);
     
             % fit plane on cluster
             [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol );
-    
             plane =  select(clusterPT, indexOnPlane);
+
+            if isempty(plane.Location)
+                isPotential = 0;
+                return
+            end
     
             % Get Z normal
             zNormal = model.Normal(3);
@@ -171,7 +180,7 @@ classdef Buoys < PointCloudSegmentation
             
             % return transform
             p = tformBuoy.Translation;
-            q = this.isObstaclePoseFlipped(rotm2quat(tformBuoy .Rotation.'), auvQuat);
+            q = this.isObstaclePoseFlipped(rotm2quat(tformBuoy.Rotation.'), auvQuat);
 
             if coder.target('MATLAB')
                 pcshow(buoyTformed)
