@@ -13,15 +13,15 @@ proc_mapping:
       box_size: 0.05       # m
     histogram_filter:
       nBin: 100             #m
-      nBinsToFilterOut: 20  #m
+      nBinsToFilterOut: 25  #m
 
   # Segmentation
   segmentation:
     buoys:
-      cluster_dist: 0.4
+      cluster_dist: 0.2
       plane_tol: 0.1
       icp_inlier_ratio: 0.1
       z_normal_thres: 0.3
       in_plane_thres: 0.5
-      min_area: 0.6
+      min_area: 0.3
       max_area: 4.5

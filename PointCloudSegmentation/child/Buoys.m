@@ -48,7 +48,6 @@ classdef Buoys < PointCloudSegmentation
             for i =1  : numClusters
                 goodCluster(i) = this.analyseCluster(i);
             end
-            sum(goodCluster)
 
             switch sum(goodCluster)
                 % Suspect 2 buyos in the same clusters
@@ -63,10 +62,10 @@ classdef Buoys < PointCloudSegmentation
 
                     % for each buoys
                     for i = 1 : 2
-                        [p, q] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
+                        [p, q, confidence] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
                         obstacle.IsValid = true;
                         obstacle.Name = char('Buoys');
-                        obstacle.Confidence = single(100.0);
+                        obstacle.Confidence = single(confidence);
                         obstacle.Pose.Position.X = p(1);
                         obstacle.Pose.Position.Y = p(2);
                         obstacle.Pose.Position.Z = p(3);
@@ -82,10 +81,10 @@ classdef Buoys < PointCloudSegmentation
                     % for each buoys
                     for i = 1 : 2
                         clusterLabels = this.PTlabels == index(i);
-                        [p, q] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
+                        [p, q, confidence] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
                         obstacle.IsValid = true;
                         obstacle.Name = char('Buoys');
-                        obstacle.Confidence = single(100.0);
+                        obstacle.Confidence = single(confidence);
                         obstacle.Pose.Position.X = p(1);
                         obstacle.Pose.Position.Y = p(2);
                         obstacle.Pose.Position.Z = p(3);
@@ -123,7 +122,7 @@ classdef Buoys < PointCloudSegmentation
 %             rest =  select(clusterPT, outlierIndexCyl);
     
             % fit plane on cluster
-            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol );
+            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol, [0,1,0], 45 );
             plane =  select(clusterPT, indexOnPlane);
 
             if isempty(plane.Location)
@@ -145,13 +144,17 @@ classdef Buoys < PointCloudSegmentation
 
             % find area
             area = box(2)*box(3);
-    
+
             % Check if cluster is a potential buoys
-            if (zNormal < this.param.zNormalThres...
+            if (abs(zNormal) < this.param.zNormalThres...
                 && percentInPlane > this.param.inPlaneThres...
                 && area > this.param.minArea && area < this.param.maxArea)
         
                 isPotential = 1;
+                figure(i+4);
+                pcshow(plane);
+                hold on;
+                model.plot;
             else
 
                 isPotential = 0;
@@ -159,10 +162,10 @@ classdef Buoys < PointCloudSegmentation
 
         end
 
-        function [p,q] = getBuoyPose(this, subPT, auvQuat)
+        function [p,q,confidence] = getBuoyPose(this, subPT, auvQuat)
             
             % Apply ransac 
-            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol );
+            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol, [0,1,0], 45 );
             plane =  select(subPT, indexOnPlane);
             
             % Get ransac plane pose approximation 
@@ -178,9 +181,30 @@ classdef Buoys < PointCloudSegmentation
             % Get buoys transformation.
             tformBuoy = rigid3d(tformRansac.T * tformICP.T);
             
-            % return transform
+            % Verify plane confidence
+            confidence = 100;
+
+            % Get Z normal
+            zNormal = model.Normal(3);
+            confidence = confidence * (1- abs(zNormal));
+
+            % Ratio in plane
+            percentInPlane = max(size(indexOnPlane)) / subPT.Count;
+            confidence = confidence * percentInPlane;
+    
+
+
+            % return transform and confidence
             p = tformBuoy.Translation;
             q = this.isObstaclePoseFlipped(rotm2quat(tformBuoy.Rotation.'), auvQuat);
+
+            % extract bounding box
+            box = this.objectAllignBoudingBox(q, plane,model);
+            % find area
+            area = box(2)*box(3);
+            if area < this.param.minArea || area > this.param.maxArea
+                confidence = confidence / 2;
+            end
 
             if coder.target('MATLAB')
                 pcshow(buoyTformed)
