@@ -14,19 +14,13 @@ classdef HistogramFilter < PointCloudFilter
         % Filter using histogram bins egdes, Only work for one column for 1
         % column at this time, use plot = true to plot the histogram.
         % Return the fitered Pointcloud
-        function filteredPT = filter(this, bundle, column, plot)
+        function filteredPT = filter(this, bundle, column)
 
-            if nargin > 3
-              debug = plot;
-            else
-              debug = false;
-            end
-
-            if(debug)
+            if coder.target('MATLAB')
                 hist = histogram(bundle(2:end,column),this.param.nBin); %remove 0,0,0
                 edges = hist.BinEdges;
             else
-                [~, edges] = histcounts(bundle(:,column),this.param.nBin);
+                [~, edges] = histcounts(bundle(2:end,column),this.param.nBin); %remove 0,0,0
             end
             
             logic = bundle(:,column) > edges(this.param.nBinsToFilterOut + 1);

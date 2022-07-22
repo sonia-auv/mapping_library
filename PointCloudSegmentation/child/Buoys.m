@@ -122,7 +122,7 @@ classdef Buoys < PointCloudSegmentation
 %             rest =  select(clusterPT, outlierIndexCyl);
     
             % fit plane on cluster
-            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol, [0,1,0], 45 );
+            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol, [1,0,0],45 );
             plane =  select(clusterPT, indexOnPlane);
 
             if isempty(plane.Location)
@@ -151,10 +151,12 @@ classdef Buoys < PointCloudSegmentation
                 && area > this.param.minArea && area < this.param.maxArea)
         
                 isPotential = 1;
-                figure(i+4);
-                pcshow(plane);
-                hold on;
-                model.plot;
+                if coder.target('MATLAB')
+                    figure(i+4);
+                    pcshow(plane);
+                    hold on;
+                    model.plot;
+                end
             else
 
                 isPotential = 0;
@@ -165,7 +167,7 @@ classdef Buoys < PointCloudSegmentation
         function [p,q,confidence] = getBuoyPose(this, subPT, auvQuat)
             
             % Apply ransac 
-            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol, [0,1,0], 45 );
+            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol, [1,0,0], 45 );
             plane =  select(subPT, indexOnPlane);
             
             % Get ransac plane pose approximation 

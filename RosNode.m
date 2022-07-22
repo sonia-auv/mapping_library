@@ -64,7 +64,7 @@ classdef RosNode
                     % Create and filter pointcloud form bundle
                         % Histogram filter
                          histFilter = HistogramFilter(this.param.filter.histogram_filter);
-                         bundle = histFilter.filter(bundle,4, true); % 3e arg : optional bool debug graph default = false
+                         bundle = histFilter.filter(bundle,4); % 3e arg : optional bool debug graph default = false
 
                         % General filter
                         ptFilter = GeneralFilter(this.param.filter.general);
