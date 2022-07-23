@@ -27,7 +27,7 @@ classdef Bundler < handle
             % Graphics functions 
             if coder.target('MATLAB')
                 this.mBigCloud = pointCloud(zeros([1, 3]), 'Intensity', 0);
-                this.mPlayer = pcplayer([-20 20],[-20 20],[0 5], 'VerticalAxisDir','Down');
+                this.mPlayer = pcplayer([-20 20],[-20 20],[0 5], 'VerticalAxisDir','Down', 'MarkerSize', 12);
             end
             
             this.mLastBundleState = false;

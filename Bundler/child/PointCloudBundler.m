@@ -39,7 +39,9 @@ classdef PointCloudBundler < Bundler
             else
                 % Recording or waiting.
                 if this.persistentDataStore('newSonarMsg') && this.persistentDataStore('bundleStarted')
-                    this.add2PtCloud(this.mSonarSub.LatestMessage, this.mPoseSub.LatestMessage.Pose.Pose);
+                    if ~empty(this.mPoseSub.LatestMessage)
+                        this.add2PtCloud(this.mSonarSub.LatestMessage, this.mPoseSub.LatestMessage.Pose.Pose);
+                    end
                     this.persistentDataStore('newSonarMsg', false);                  
                 end
             end
@@ -90,7 +92,9 @@ classdef PointCloudBundler < Bundler
     methods(Access = private)
         %% Adding to the point cloud.
         function add2PtCloud(this, sonarMsg, poseMsg)
-            fprintf('INFO : proc mapping : sonar : Append to point cloud. \n');
+            if coder.target('MATLAB')
+                fprintf('INFO : proc mapping : sonar : Append to point cloud. \n');
+            end
             % scan = rosReadLidarScan(sonarMsg);
             pos = [0, 0, 0];
             quat = [1, 0, 0, 0];

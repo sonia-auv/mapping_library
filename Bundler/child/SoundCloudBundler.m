@@ -40,7 +40,9 @@ classdef SoundCloudBundler < Bundler
             else
                 % Recording or waiting.
                 if this.persistentDataStore('newHydroMsg') && this.persistentDataStore('bundleStarted')
-                    this.add2PtCloud(this.mHydroSub.LatestMessage, this.mPoseSub.LatestMessage.Pose.Pose);
+                    if ~empty(this.mPoseSub.LatestMessage)
+                        this.add2PtCloud(this.mHydroSub.LatestMessage, this.mPoseSub.LatestMessage.Pose.Pose);
+                    end
                     this.persistentDataStore('newHydroMsg', false);                  
                 end
             end
@@ -66,13 +68,13 @@ classdef SoundCloudBundler < Bundler
     methods(Access = private)
         % Adding to the point cloud.
         function add2PtCloud(this, hydroMsg, poseMsg)
-            fprintf('INFO : proc mapping : hydro : Append to point cloud. \n');
-
+            if coder.target('MATLAB')
+                fprintf('INFO : proc mapping : hydro : Append to point cloud. \n');
+            end
             pos = [0, 0, 0];
             quat = [1, 0, 0, 0];
             
             % Getting the sub pose.
-            fprintf("INFO : proc mapping : Pose received. \n");
             pos(1) = poseMsg.Position.X;
             pos(2) = poseMsg.Position.Y;
             pos(3) = poseMsg.Position.Z;              
@@ -113,8 +115,8 @@ classdef SoundCloudBundler < Bundler
             quat(4) = poseMsg.Orientation.Z;
 
             % Trouver la valeur de z
-            lever = quatrotate(quatinv(quat),this.hydroPose)
-            z = 1.5 -  poseMsg.Position.Z  + lever(3);
+            lever = quatrotate(quatinv(quat),this.hydroPose);
+            z = this.param.parameters.hydro.pingerDepth -  poseMsg.Position.Z  + lever(3);
 
             rho = z/cos(theta);
 
