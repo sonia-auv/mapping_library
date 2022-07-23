@@ -5,8 +5,14 @@ classdef SoundCloudBundler < Bundler
     properties (Access = private)
         % Subscribers
         mHydroSub;
+        hydroPose = [.155, 0, .118];
+        
     end
     
+    properties
+        i;
+    end
+
     methods (Access = public)
         %% SoundCloudBundler Constructor
         function this = SoundCloudBundler(param) 
@@ -15,10 +21,11 @@ classdef SoundCloudBundler < Bundler
             this.mBundle = zeros(1, 4);
 
             % Subscribers
-            this.mHydroSub = rossubscriber('/proc_simulation/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
+            this.mHydroSub = rossubscriber('/proc_hydrophone/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
             this.mStartSub = rossubscriber('/proc_mapping/hydro/start', 'std_msgs/Bool', @this.startCallback, "DataFormat", "struct");
             this.mStopSub = rossubscriber('/proc_mapping/hydro/stop', 'std_msgs/Bool', @this.stopCallback, "DataFormat", "struct");
-            this.mClearBundleSub = rossubscriber('/proc_mapping/hydro/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct");   
+            this.mClearBundleSub = rossubscriber('/proc_mapping/hydro/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct"); 
+            this.i=1;  
         end
 
         %% Step function
@@ -79,11 +86,15 @@ classdef SoundCloudBundler < Bundler
             quat = quatinv(quat);
             
             xyzi = zeros(1, 4);
-            xyzi(1:3) = this.hydroAngle2Cartesian(this.mHydroSub.Heading, this.mHydroSub.Elevation);
-            xyzi(4) = 1; % Fake intensity
+            hydro = this.hydroAngle2Cartesian(hydroMsg.Heading, hydroMsg.Elevation, poseMsg);
+            
 
-            point = sonar2NED(pos.', quat, [0.358, 0, -0.118].', [xyzi(1,1), xyzi(1,2), 0]).'; 
-            xyzi(i, 1:3) = point(1:3);
+            point = sonar2NED(pos.', quat, this.hydroPose.', hydro.').'; 
+            xyzi(1, 1:3) = point(1:3);
+            xyzi(4) = hydroMsg.Snr; % 
+            
+            xyzi
+            this.i = this.i + 1;
 
             if coder.target('MATLAB')
                 ptCloud = pointCloud(xyzi(:, 1:3), 'Intensity', xyzi(:, 4));
@@ -94,10 +105,18 @@ classdef SoundCloudBundler < Bundler
             this.mBundle = [this.mBundle; xyzi];
         end  
         
-        function pose = hydroAngle2Cartesian(phi, theta)
-            z = this.param.parameters.hydro.pingerDepth
-            rho = z / cos(theta);
+        function pose = hydroAngle2Cartesian(this, phi, theta, poseMsg)
 
+            quat(1) = poseMsg.Orientation.W;
+            quat(2) = poseMsg.Orientation.X;
+            quat(3) = poseMsg.Orientation.Y;
+            quat(4) = poseMsg.Orientation.Z;
+
+            % Trouver la valeur de z
+            lever = quatrotate(quatinv(quat),this.hydroPose)
+            z = 1.5 -  poseMsg.Position.Z  + lever(3);
+
+            rho = z/cos(theta);
 
             pose = [rho *cos(phi)*sin(theta);
                     rho * sin(phi) * sin(theta);
