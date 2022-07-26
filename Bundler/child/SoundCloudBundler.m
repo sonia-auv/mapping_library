@@ -40,7 +40,7 @@ classdef SoundCloudBundler < Bundler
             else
                 % Recording or waiting.
                 if this.persistentDataStore('newHydroMsg') && this.persistentDataStore('bundleStarted')
-                    if ~empty(this.mPoseSub.LatestMessage)
+                    if ~isempty(this.mPoseSub.LatestMessage)
                         this.add2PtCloud(this.mHydroSub.LatestMessage, this.mPoseSub.LatestMessage.Pose.Pose);
                     end
                     this.persistentDataStore('newHydroMsg', false);                  
