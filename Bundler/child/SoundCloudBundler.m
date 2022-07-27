@@ -88,12 +88,13 @@ classdef SoundCloudBundler < Bundler
             xyzi = zeros(1, 4);
             hydro = this.hydroAngle2Cartesian(hydroMsg.Heading, hydroMsg.Elevation, poseMsg);
             
+            %apply puck rotation
+            hydro = quatrotate(eul2quat(deg2rad([-150,0,0]),'ZYX'),hydro.');
 
-            point = sonar2NED(pos.', quat, this.hydroPose.', hydro.').'; 
+            point = sonar2NED(pos.', quat, this.hydroPose.', hydro).'; 
             xyzi(1, 1:3) = point(1:3);
             xyzi(4) = hydroMsg.Snr; % 
-            
-            xyzi
+
             this.i = this.i + 1;
 
             if coder.target('MATLAB')
@@ -113,8 +114,8 @@ classdef SoundCloudBundler < Bundler
             quat(4) = poseMsg.Orientation.Z;
 
             % Trouver la valeur de z
-            lever = quatrotate(quatinv(quat),this.hydroPose)
-            z = 1.5 -  poseMsg.Position.Z  + lever(3);
+            lever = quatrotate(quat,this.hydroPose); 
+            z = 3.22 -  poseMsg.Position.Z  + lever(3);
 
             rho = z/cos(theta);
 
