@@ -53,12 +53,18 @@ classdef RosNode
             while ~killNode
                 % PointCloud Bundler
                 if ~this.mPtBundler.step()
-                    ptBundle = this.mPtBundler.getBundle();
-                    if size(ptBundle, 1) > 1
-                        % Create and filter pointcloud from bundle
-                        ptFilter = GeneralFilter(this.param.filter.sonar.general);
-                        filt = ptFilter.filter(ptBundle);
-                        % Prepare and send the result message for this bundle.
+                    fprintf('INFO : proc mapping : Not bundling. \n');
+                    bundle = this.mPtBundler.getBundle();
+                    if size(bundle, 1) > 1
+                        % Create and filter pointcloud form bundle
+                        % Histogram filter
+                         histFilter = HistogramFilter(this.param.filter.sonar.histogram_filter);
+                         bundle = histFilter.filter(bundle,4); % 3e arg : optional bool debug graph default = false
+
+                        % General filter
+                        ptFilter = GeneralFilter(this.param.filter.general);
+                        filt = ptFilter.filter(bundle);
+    
                         switch upper(this.mPtBundler.getBundleName())
                             case 'BUOYS'
                                 buoys = Buoys(filt, this.param.segmentation.buoys);
@@ -101,7 +107,7 @@ classdef RosNode
     methods (Access = private)
         function param = getRosParams(this)
             % Preprocessing
-            param.preprocessing.minIntensity = 0.1;
+            param.preprocessing.minIntensity = 0.01;
             param.preprocessing.maxIntensity = 1.0;
             param.preprocessing.minRange = 0.1;
             param.preprocessing.maxRange = 5.0;
@@ -110,11 +116,15 @@ classdef RosNode
             % General
             param.filter.sonar.general.boxSize = 0.05;
             param.filter.hydro.general.boxSize = 0.05;
+            param.filter.general.boxSize = 0.05;
+            % Histogram
+            param.filter.sonar.histogram_filter.nBin = 100;
+            param.filter.sonar.histogram_filter.nBinsToFilterOut = 10;
 
             % Segmentation
             % Buoys
             param.segmentation.buoys.clusterDist = 0.4;
-            param.segmentation.buoys.planeTol = 0.02;
+            param.segmentation.buoys.planeTol = 0.05;
             param.segmentation.buoys.icpInlierRatio = 0.1;
             param.segmentation.buoys.zNormalThres = 0.2;
             param.segmentation.buoys.inPlaneThres = 0.4;
@@ -145,6 +155,9 @@ classdef RosNode
             % General
             param.filter.sonar.general.boxSize = rosparams.getValue('/proc_mapping/filter/sonar/general/box_size', param.filter.sonar.general.boxSize);
             param.filter.hydro.general.boxSize = rosparams.getValue('/proc_mapping/filter/hydro/general/box_size', param.filter.hydro.general.boxSize);
+            % Histogram
+            param.filter.sonar.histogram_filter.nBin = rosparams.getValue('/proc_mapping/filter/sonar/histogram_filter/nBin', param.filter.sonar.histogram_filter.nBin);
+            param.filter.sonar.histogram_filter.nBinsToFilterOut = rosparams.getValue('/proc_mapping/sonar/filter/histogram_filter/nBinsToFilterOut', param.filter.sonar.histogram_filter.nBinsToFilterOut);
 
             % Segmentation
             % Buoys

@@ -62,10 +62,10 @@ classdef Buoys < PointCloudSegmentation
 
                     % for each buoys
                     for i = 1 : 2
-                        [p, q] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat);
+                        [p, q, confidence] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
                         obstacle.IsValid = true;
                         obstacle.Name = char('Buoys');
-                        obstacle.Confidence = single(100.0);
+                        obstacle.Confidence = single(confidence);
                         obstacle.Pose.Position.X = p(1);
                         obstacle.Pose.Position.Y = p(2);
                         obstacle.Pose.Position.Z = p(3);
@@ -81,10 +81,10 @@ classdef Buoys < PointCloudSegmentation
                     % for each buoys
                     for i = 1 : 2
                         clusterLabels = this.PTlabels == index(i);
-                        [p, q] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
+                        [p, q, confidence] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
                         obstacle.IsValid = true;
                         obstacle.Name = char('Buoys');
-                        obstacle.Confidence = single(100.0);
+                        obstacle.Confidence = single(confidence);
                         obstacle.Pose.Position.X = p(1);
                         obstacle.Pose.Position.Y = p(2);
                         obstacle.Pose.Position.Z = p(3);
@@ -99,6 +99,7 @@ classdef Buoys < PointCloudSegmentation
                 otherwise
                     for i = 1 : 2
                         feature(i).IsValid = false;
+
                     end
                     return
             end 
@@ -112,14 +113,18 @@ classdef Buoys < PointCloudSegmentation
 
         function isPotential = analyseCluster(this,i)
 
-            % extract pointCloud
+            % Extract pointCloud
             clusterLabels = this.PTlabels == i;
             clusterPT = select(this.filteredPT,clusterLabels);
     
-            % fit plane on cluster
-            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol );
-    
+            % Fit plane on cluster
+            [model, indexOnPlane, ~ , meanError ] = pcfitplane(clusterPT, this.param.planeTol, [1,0,0],45 );
             plane =  select(clusterPT, indexOnPlane);
+
+            if isempty(plane.Location)
+                isPotential = 0;
+                return
+            end
     
             % Get Z normal
             zNormal = model.Normal(3);
@@ -130,18 +135,24 @@ classdef Buoys < PointCloudSegmentation
             % Extract pose of the plane.
             [p, q] = this.getOrientedPointOnPlanarFace(model, plane);
     
-            % extract bounding box
+            % Extract bounding box
             box = this.objectAllignBoudingBox(q, plane,model);
 
-            % find area
+            % Find area
             area = box(2)*box(3);
-    
+
             % Check if cluster is a potential buoys
-            if (zNormal < this.param.zNormalThres...
+            if (abs(zNormal) < this.param.zNormalThres...
                 && percentInPlane > this.param.inPlaneThres...
                 && area > this.param.minArea && area < this.param.maxArea)
         
                 isPotential = 1;
+                if coder.target('MATLAB')
+                    figure(i+4);
+                    pcshow(plane);
+                    hold on;
+                    model.plot;
+                end
             else
 
                 isPotential = 0;
@@ -149,10 +160,10 @@ classdef Buoys < PointCloudSegmentation
 
         end
 
-        function [p,q] = getBuoyPose(this, subPT, auvQuat)
+        function [p,q,confidence] = getBuoyPose(this, subPT, auvQuat)
             
-            % Apply ransac 
-            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol );
+            % Apply Ransac 
+            [model, indexOnPlane, ~, meanError ] = pcfitplane(subPT, this.param.planeTol, [1,0,0], 45 );
             plane =  select(subPT, indexOnPlane);
             
             % Get ransac plane pose approximation 
@@ -168,17 +179,34 @@ classdef Buoys < PointCloudSegmentation
             % Get buoys transformation.
             tformBuoy = rigid3d(tformRansac.T * tformICP.T);
             
-            % return transform
+            % Verify plane confidence
+            confidence = 100;
+
+            % Get Z normal
+            zNormal = model.Normal(3);
+            confidence = confidence * (1- abs(zNormal));
+
+            % Ratio in plane
+            percentInPlane = max(size(indexOnPlane)) / subPT.Count;
+            confidence = confidence * percentInPlane;
+    
+            % Teturn transformation and confidence
             p = tformBuoy.Translation;
-            q = this.isObstaclePoseFlipped(rotm2quat(tformBuoy .Rotation.'), auvQuat);
+            q = this.isObstaclePoseFlipped(rotm2quat(tformBuoy.Rotation.'), auvQuat);
+
+            % Extract bounding box
+            box = this.objectAllignBoudingBox(q, plane,model);
+            % Find area
+            area = box(2)*box(3);
+            if area < this.param.minArea || area > this.param.maxArea
+                confidence = confidence / 2;
+            end
 
             if coder.target('MATLAB')
                 pcshow(buoyTformed)
                 hold on 
                 poseplot(quaternion(q),'Position',p,ScaleFactor=0.2);
             end
-        
-
         end
     end
 end

@@ -3,7 +3,7 @@
 proc_mapping:
   # Preprocessing
   preprocessing:
-    min_intensity: 0.1
+    min_intensity: 0.05
     max_intensity: 1.0
     min_range: 0.1      # m
     max_range: 10.0     # m
@@ -12,9 +12,13 @@ proc_mapping:
     sonar:
       general:
         box_size: 0.05  # m 
+      histogram_filter:
+        nBin: 100
+        nBinsToFilterOut: 25
     hydro:
       general:
         box_size: 0.05  # m
+    max_range: 10.0         # m
 
   # Segmentation
   segmentation:
