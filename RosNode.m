@@ -53,11 +53,11 @@ classdef RosNode
             while ~killNode
                 % PointCloud Bundler
                 if ~this.mPtBundler.step()
-                    bundle = this.mPtBundler.getBundle();
-                    if size(bundle, 1) > 1
+                    ptBundle = this.mPtBundler.getBundle();
+                    if size(ptBundle, 1) > 1
                         % Create and filter pointcloud from bundle
-                        ptFilter = GeneralFilter(this.param.filter.general);
-                        filt = ptFilter.filter(bundle);
+                        ptFilter = GeneralFilter(this.param.filter.sonar.general);
+                        filt = ptFilter.filter(ptBundle);
                         % Prepare and send the result message for this bundle.
                         switch upper(this.mPtBundler.getBundleName())
                             case 'BUOYS'
@@ -73,7 +73,14 @@ classdef RosNode
 
                 % SoundCloud Bundler
                 if ~this.mScBundler.step()
-
+                    scBundle = this.mScBundler.getBundle();
+                    if size(scBundle, 1) > 1
+                        % Filter the hydrophone point cloud.
+                        scFilter = GeneralFilter(this.param.filter.hydro.general);
+                        filt = scFilter.filter(scBundle);
+                        % Find the center of the point cloud.
+                        
+                    end
                 else
                     % fprintf('INFO : proc mapping : hydro : Bundling or waiting. \n');
                 end
@@ -101,7 +108,8 @@ classdef RosNode
 
             % Filter
             % General
-            param.filter.general.boxSize = 0.05;
+            param.filter.sonar.general.boxSize = 0.05;
+            param.filter.hydro.general.boxSize = 0.05;
 
             % Segmentation
             % Buoys
@@ -135,7 +143,8 @@ classdef RosNode
 
             % Filter
             % General
-            param.filter.general.boxSize = rosparams.getValue('/proc_mapping/filter/general/box_size', param.filter.general.boxSize);
+            param.filter.sonar.general.boxSize = rosparams.getValue('/proc_mapping/filter/sonar/general/box_size', param.filter.sonar.general.boxSize);
+            param.filter.hydro.general.boxSize = rosparams.getValue('/proc_mapping/filter/hydro/general/box_size', param.filter.hydro.general.boxSize);
 
             % Segmentation
             % Buoys

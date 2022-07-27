@@ -5,34 +5,38 @@ proc_mapping:
   preprocessing:
     min_intensity: 0.1
     max_intensity: 1.0
-    min_range: 0.1         # m
-    max_range: 10.0         # m
+    min_range: 0.1      # m
+    max_range: 10.0     # m
 
   filter:
-    general:
-      box_size: 0.05       # m 
+    sonar:
+      general:
+        box_size: 0.05  # m 
+    hydro:
+      general:
+        box_size: 0.05  # m
 
   # Segmentation
   segmentation:
     buoys:
-      cluster_dist: 0.4
+      cluster_dist: 0.4       # m 
       plane_tol: 0.05
       icp_inlier_ratio: 0.1
       z_normal_thres: 0.2
       in_plane_thres: 0.4
-      min_area: 0.6
-      max_area: 3.5
+      min_area: 0.6           # m^2
+      max_area: 3.5           # m^2
 
   # Parameters
   parameters:
     hydro:
       pinger_depth: 3.22
       translation:
-        x: 0.115
-        y: 0
-        z: 0.118
+        x: 0.115    # m
+        y: 0        # m 
+        z: 0.118    # m
     sonar:
       translation:
-        x: 0.358
-        y: 0
-        z: -0.118
+        x: 0.358    # m
+        y: 0        # m
+        z: -0.118   # m
