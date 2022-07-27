@@ -39,7 +39,7 @@ classdef PointCloudBundler < Bundler
             else
                 % Recording or waiting.
                 if this.persistentDataStore('newSonarMsg') && this.persistentDataStore('bundleStarted')
-                    if ~empty(this.mPoseSub.LatestMessage)
+                    if ~isempty(this.mPoseSub.LatestMessage)
                         this.add2PtCloud(this.mSonarSub.LatestMessage, this.mPoseSub.LatestMessage.Pose.Pose);
                     end
                     this.persistentDataStore('newSonarMsg', false);                  
