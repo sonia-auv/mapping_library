@@ -26,7 +26,11 @@ proc_mapping:
   # Parameters
   parameters:
     hydro:
-      pinger_depth: 5.0
+      pinger_depth: 3.22
+      translation:
+        x: 0.115
+        y: 0
+        z: 0.118
     sonar:
       translation:
         x: 0.358

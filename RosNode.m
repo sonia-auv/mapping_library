@@ -116,6 +116,9 @@ classdef RosNode
             % Parameters
             % Hydro
             param.parameters.hydro.pingerDepth = 5.0;
+            param.parameters.hydro.translation.x = 0.155;
+            param.parameters.hydro.translation.y = 0;
+            param.parameters.hydro.translation.z = 0.118;
 
             % Sonar
             param.parameters.sonar.translation.x = 0.358;
@@ -147,6 +150,9 @@ classdef RosNode
             % Parameters
             % Hydro
             param.parameters.hydro.pingerDepth = rosparams.getValue('/proc_mapping/parameters/hydro/pinger_depth', param.parameters.hydro.pingerDepth);
+            param.parameters.hydro.translation.x = rosparams.getValue('/proc_mapping/parameters/hydro/translation/x', param.parameters.hydro.translation.x);
+            param.parameters.hydro.translation.y = rosparams.getValue('/proc_mapping/parameters/hydro/translation/y', param.parameters.hydro.translation.y);
+            param.parameters.hydro.translation.z = rosparams.getValue('/proc_mapping/parameters/hydro/translation/z', param.parameters.hydro.translation.z);
 
             % Sonar
             param.parameters.sonar.translation.x = rosparams.getValue('/proc_mapping/parameters/sonar/translation/x', param.parameters.sonar.translation.x);

@@ -5,7 +5,7 @@ classdef SoundCloudBundler < Bundler
     properties (Access = private)
         % Subscribers
         mHydroSub;
-        hydroPose = [.155, 0, .118];
+        mHydroPose;
         
     end
     
@@ -19,6 +19,11 @@ classdef SoundCloudBundler < Bundler
             this@Bundler(param); 
 
             this.mBundle = zeros(1, 4);
+
+            tx = param.parameters.hydro.translation.x;
+            ty = param.parameters.hydro.translation.y;
+            tz = param.parameters.hydro.translation.z;
+            this.mHydroPose  = [tx, ty, tz];
 
             % Subscribers
             this.mHydroSub = rossubscriber('/proc_hydrophone/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
@@ -92,7 +97,7 @@ classdef SoundCloudBundler < Bundler
             %apply puck rotation
             hydro = quatrotate(eul2quat(deg2rad([-150,0,0]),'ZYX'),hydro.');
 
-            point = sonar2NED(pos.', quat, this.hydroPose.', hydro).'; 
+            point = sonar2NED(pos.', quat, this.mHydroPose.', hydro).'; 
             xyzi(1, 1:3) = point(1:3);
             xyzi(4) = hydroMsg.Snr; % 
 
@@ -115,10 +120,10 @@ classdef SoundCloudBundler < Bundler
             quat(4) = poseMsg.Orientation.Z;
 
             % Trouver la valeur de z
-            lever = quatrotate(quat,this.hydroPose); 
+            lever = quatrotate(quat,this.mHydroPose); 
             z = 3.22 -  poseMsg.Position.Z  + lever(3);
 
-            lever = quatrotate(quatinv(quat),this.hydroPose);
+            lever = quatrotate(quatinv(quat),this.mHydroPose);
             z = this.mParam.parameters.hydro.pingerDepth -  poseMsg.Position.Z  + lever(3);
 
             rho = z/cos(theta);
