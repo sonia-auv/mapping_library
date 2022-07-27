@@ -4,7 +4,7 @@ function proc_mapping
         clear all;
         if ~ ros.internal.Global.isNodeActive
             % partir le node ros matlab 
-            rosinit("192.168.0.31");
+            rosinit;
         end
         system("rosparam load ./config/proc_mapping_config.yaml");
         fprintf('INFO : proc mapping : Ros param loaded. \n');
