@@ -94,9 +94,9 @@ classdef SoundCloudBundler < Bundler
             hydro = this.hydroAngle2Cartesian(hydroMsg.Heading, hydroMsg.Elevation, poseMsg);
             
             %apply puck rotation
-            hydro = quatrotate(eul2quat(deg2rad([-150,0,0]),'ZYX'),hydro.');
+            % hydro = quatrotate(eul2quat(deg2rad([-150,0,0]),'ZYX'),hydro.');
 
-            point = sonar2NED(pos.', quat, this.mHydroPose.', hydro).'; 
+            point = sonar2NED(pos.', quat, this.mHydroPose.', hydro.').'; 
             xyzi(1, 1:3) = point(1:3);
             xyzi(4) = hydroMsg.Snr;
 
