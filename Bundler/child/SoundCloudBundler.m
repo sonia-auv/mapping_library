@@ -91,7 +91,7 @@ classdef SoundCloudBundler < Bundler
             quat = quatinv(quat);
             
             xyzi = zeros(1, 4);
-            hydro = this.hydroAngle2Cartesian(hydroMsg.Heading, hydroMsg.Elevation, poseMsg);
+            hydro = this.hydroAngle2Cartesian(hydroMsg.Heading + deg2rad(30), hydroMsg.Elevation, poseMsg);
             
             %apply puck rotation
             % hydro = quatrotate(eul2quat(deg2rad([-150,0,0]),'ZYX'),hydro.');
