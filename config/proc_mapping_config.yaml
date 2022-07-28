@@ -37,7 +37,7 @@ proc_mapping:
   # Parameters
   parameters:
     hydro:
-      pinger_depth: 3.22
+      pinger_depth: 5.0  # m
       translation:
         x: 0.115    # m
         y: 0        # m 
