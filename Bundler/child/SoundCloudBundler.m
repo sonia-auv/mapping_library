@@ -71,7 +71,6 @@ classdef SoundCloudBundler < Bundler
     methods(Access = private)
         % Adding to the point cloud.
         function add2PtCloud(this, hydroMsg, poseMsg)
-            hydroMsg
             if coder.target('MATLAB')
                 fprintf('INFO : proc mapping : hydro : Append to point cloud. \n');
             end
@@ -99,7 +98,7 @@ classdef SoundCloudBundler < Bundler
 
             point = sonar2NED(pos.', quat, this.mHydroPose.', hydro).'; 
             xyzi(1, 1:3) = point(1:3);
-            xyzi(4) = hydroMsg.Snr; % 
+            xyzi(4) = hydroMsg.Snr;
 
             this.i = this.i + 1;
 
@@ -113,16 +112,12 @@ classdef SoundCloudBundler < Bundler
         end  
         
         function pose = hydroAngle2Cartesian(this, phi, theta, poseMsg)
-
             quat(1) = poseMsg.Orientation.W;
             quat(2) = poseMsg.Orientation.X;
             quat(3) = poseMsg.Orientation.Y;
             quat(4) = poseMsg.Orientation.Z;
 
             % Trouver la valeur de z
-            lever = quatrotate(quat,this.mHydroPose); 
-            z = 3.22 -  poseMsg.Position.Z  + lever(3);
-
             lever = quatrotate(quatinv(quat),this.mHydroPose);
             z = this.mParam.parameters.hydro.pingerDepth -  poseMsg.Position.Z  + lever(3);
 

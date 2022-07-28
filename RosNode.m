@@ -58,8 +58,8 @@ classdef RosNode
                     if size(bundle, 1) > 1
                         % Create and filter pointcloud form bundle
                         % Histogram filter
-                         histFilter = HistogramFilter(this.param.filter.sonar.histogram_filter);
-                         bundle = histFilter.filter(bundle,4); % 3e arg : optional bool debug graph default = false
+                        histFilter = HistogramFilter(this.param.filter.sonar.histogram_filter);
+                        bundle = histFilter.filter(bundle,4); % 3e arg : optional bool debug graph default = false
 
                         % General filter
                         ptFilter = GeneralFilter(this.param.filter.general);
@@ -69,7 +69,7 @@ classdef RosNode
                             case 'BUOYS'
                                 buoys = Buoys(filt, this.param.segmentation.buoys);
                                 [~, quat] = this.mPtBundler.getLastSubPose();
-                                this.obstacleArray.Obstacles(1:2) = buoys.SegementByAtribute(quat);
+                                this.obstacleArray.Obstacles(2:3) = buoys.SegementByAtribute(quat);
                                 send(this.obstacleArrayPublisher, this.obstacleArray);
                         end
                     end
@@ -84,8 +84,11 @@ classdef RosNode
                         % Filter the hydrophone point cloud.
                         scFilter = GeneralFilter(this.param.filter.hydro.general);
                         filt = scFilter.filter(scBundle);
-                        % Find the center of the point cloud.
-                        
+                        % Segment the point cloud and find the center.
+                        [~, quat] = this.mPtBundler.getLastSubPose();
+                        hydro = Hydro(filt, this.param.segmentation.hydro);
+                        this.obstacleArray.Obstacles(6) = hydro.SegementByAtribute(quat);
+                        send(this.obstacleArrayPublisher, this.obstacleArray);
                     end
                 else
                     % fprintf('INFO : proc mapping : hydro : Bundling or waiting. \n');
@@ -131,6 +134,9 @@ classdef RosNode
             param.segmentation.buoys.minArea = 0.6;
             param.segmentation.buoys.maxArea = 2.5;
 
+            % Hydro
+            param.segmentation.hydro.clusterDist = 0.5;
+
             % Parameters
             % Hydro
             param.parameters.hydro.pingerDepth = 5.0;
@@ -168,6 +174,9 @@ classdef RosNode
             param.segmentation.buoys.inPlaneThres = rosparams.getValue('/proc_mapping/segmentation/buoys/in_plane_thres', param.segmentation.buoys.inPlaneThres);
             param.segmentation.buoys.minArea = rosparams.getValue('/proc_mapping/segmentation/buoys/min_area', param.segmentation.buoys.minArea);
             param.segmentation.buoys.maxArea = rosparams.getValue('/proc_mapping/segmentation/buoys/max_area', param.segmentation.buoys.maxArea);
+        
+            % Hydro
+            param.segmentation.hydro.clusterDist = rosparams.getValue('/proc_mapping/segmentation/hydro/cluster_dist', param.segmentation.hydro.clusterDist);
 
             % Parameters
             % Hydro

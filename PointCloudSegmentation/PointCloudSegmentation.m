@@ -49,7 +49,7 @@ classdef PointCloudSegmentation
             box = zeros(1,3);
             box(1) = (pct.XLimits(2)-pct.XLimits(1));
             box(2) = (pct.YLimits(2)-pct.YLimits(1));
-            box(3) = (pct.ZLimits(2)-pct.ZLimits(1));
+            box(3) = (pct.ZLimits(2)-pct.ZLimits(1));l
             
         
         end
