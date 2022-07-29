@@ -60,7 +60,7 @@ classdef Buoys < PointCloudSegmentation
             
             % Getting the good cluster.
             index = find(goodCluster == 1);
-            % get the good cluster
+            % Get the good cluster
             clusterLabels = this.PTlabels == index;
             clusterPT =  select(this.filteredPT, clusterLabels);
             
@@ -77,61 +77,60 @@ classdef Buoys < PointCloudSegmentation
             obstacle.Pose.Orientation.Z = q(4);
             feature(1) = obstacle;
             
-
-            switch sum(goodCluster)
-                % Suspect 2 buyos in the same clusters
-                case 1
-                    index = find(goodCluster == 1);
-                    % get the good cluster
-                    clusterLabels = this.PTlabels == index;
-                    clusterPT =  select(this.filteredPT, clusterLabels);
-                    
-                    % split cluster with kmeans
-                    kmeansIndex = kmeans(clusterPT.Location, 2);
-
-                    % for each buoys
-                    for i = 1 : 2
-                        [p, q, confidence] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
-                        obstacle.IsValid = true;
-                        obstacle.Name = char('Buoys');
-                        obstacle.Confidence = single(confidence);
-                        obstacle.Pose.Position.X = p(1);
-                        obstacle.Pose.Position.Y = p(2);
-                        obstacle.Pose.Position.Z = p(3);
-                        obstacle.Pose.Orientation.W = q(1);
-                        obstacle.Pose.Orientation.X = q(2);
-                        obstacle.Pose.Orientation.Y = q(3);
-                        obstacle.Pose.Orientation.Z = q(4);
-                        feature(i) = obstacle;
-                    end
-
-                case 2
-                    index = find(goodCluster == 1);
-                    % for each buoys
-                    for i = 1 : 2
-                        clusterLabels = this.PTlabels == index(i);
-                        [p, q, confidence] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
-                        obstacle.IsValid = true;
-                        obstacle.Name = char('Buoys');
-                        obstacle.Confidence = single(confidence);
-                        obstacle.Pose.Position.X = p(1);
-                        obstacle.Pose.Position.Y = p(2);
-                        obstacle.Pose.Position.Z = p(3);
-                        obstacle.Pose.Orientation.W = q(1);
-                        obstacle.Pose.Orientation.X = q(2);
-                        obstacle.Pose.Orientation.Y = q(3);
-                        obstacle.Pose.Orientation.Z = q(4);
-                        feature(i) = obstacle;
-                    end
-
-                % Nothing found
-                otherwise
-                    for i = 1 : 2
-                        feature(i).IsValid = false;
-
-                    end
-                    return
-            end 
+%             switch sum(goodCluster)
+%                 % Suspect 2 buyos in the same clusters
+%                 case 1
+%                     index = find(goodCluster == 1);
+%                     % get the good cluster
+%                     clusterLabels = this.PTlabels == index;
+%                     clusterPT =  select(this.filteredPT, clusterLabels);
+%                     
+%                     % split cluster with kmeans
+%                     kmeansIndex = kmeans(clusterPT.Location, 2);
+% 
+%                     % for each buoys
+%                     for i = 1 : 2
+%                         [p, q, confidence] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
+%                         obstacle.IsValid = true;
+%                         obstacle.Name = char('Buoys');
+%                         obstacle.Confidence = single(confidence);
+%                         obstacle.Pose.Position.X = p(1);
+%                         obstacle.Pose.Position.Y = p(2);
+%                         obstacle.Pose.Position.Z = p(3);
+%                         obstacle.Pose.Orientation.W = q(1);
+%                         obstacle.Pose.Orientation.X = q(2);
+%                         obstacle.Pose.Orientation.Y = q(3);
+%                         obstacle.Pose.Orientation.Z = q(4);
+%                         feature(i) = obstacle;
+%                     end
+% 
+%                 case 2
+%                     index = find(goodCluster == 1);
+%                     % for each buoys
+%                     for i = 1 : 2
+%                         clusterLabels = this.PTlabels == index(i);
+%                         [p, q, confidence] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
+%                         obstacle.IsValid = true;
+%                         obstacle.Name = char('Buoys');
+%                         obstacle.Confidence = single(confidence);
+%                         obstacle.Pose.Position.X = p(1);
+%                         obstacle.Pose.Position.Y = p(2);
+%                         obstacle.Pose.Position.Z = p(3);
+%                         obstacle.Pose.Orientation.W = q(1);
+%                         obstacle.Pose.Orientation.X = q(2);
+%                         obstacle.Pose.Orientation.Y = q(3);
+%                         obstacle.Pose.Orientation.Z = q(4);
+%                         feature(i) = obstacle;
+%                     end
+% 
+%                 % Nothing found
+%                 otherwise
+%                     for i = 1 : 2
+%                         feature(i).IsValid = false;
+% 
+%                     end
+%                     return
+%             end 
         end
     end
 
@@ -206,7 +205,8 @@ classdef Buoys < PointCloudSegmentation
             tformICP = pcregistericp(buoyTformed , plane,"InlierRatio",this.param.icpInlierRatio);
 
             % Get buoys transformation.
-            tformBuoy = rigid3d(tformRansac.T * tformICP.T);
+            tformBuoy = rigid3d(tformRansac.T);
+            %tformBuoy = rigid3d(tformRansac.T * tformICP.T);
             
             % Verify plane confidence
             confidence = 100;
