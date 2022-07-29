@@ -68,14 +68,30 @@ classdef Buoys < PointCloudSegmentation
             obstacle.IsValid = true;
             obstacle.Name = char('Buoys');
             obstacle.Confidence = single(confidence);
-            obstacle.Pose.Position.X = p(1);
-            obstacle.Pose.Position.Y = p(2);
-            obstacle.Pose.Position.Z = p(3);
+
+            offset = quatrotate(quatinv(q),[0,0.450,0]);
+
+
+            obstacle.Pose.Position.X = p(1) + offset
+            obstacle.Pose.Position.Y = p(2) + offset
+            obstacle.Pose.Position.Z = p(3) + offset
             obstacle.Pose.Orientation.W = q(1);
             obstacle.Pose.Orientation.X = q(2);
             obstacle.Pose.Orientation.Y = q(3);
             obstacle.Pose.Orientation.Z = q(4);
+            
             feature(1) = obstacle;
+
+            obstacle.Pose.Position.X = p(1) - offset
+            obstacle.Pose.Position.Y = p(2) - offset
+            obstacle.Pose.Position.Z = p(3) - offset
+            feature(2) = obstacle;
+
+            if coder.target('MATLAB')
+                hold on 
+                poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
+                poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
+            end
             
 %             switch sum(goodCluster)
 %                 % Suspect 2 buyos in the same clusters
@@ -205,15 +221,15 @@ classdef Buoys < PointCloudSegmentation
             tformICP = pcregistericp(buoyTformed , plane,"InlierRatio",this.param.icpInlierRatio);
 
             % Get buoys transformation.
-            tformBuoy = rigid3d(tformRansac.T);
-            %tformBuoy = rigid3d(tformRansac.T * tformICP.T);
+            %tformBuoy = rigid3d(tformRansac.T);
+            tformBuoy = rigid3d(tformRansac.T * tformICP.T);
             
             % Verify plane confidence
             confidence = 100;
 
             % Get Z normal
             zNormal = model.Normal(3);
-            confidence = confidence * (1- abs(zNormal));
+            confidence = confidence * (1 - abs(zNormal));
 
             % Ratio in plane
             percentInPlane = max(size(indexOnPlane)) / subPT.Count;
@@ -231,11 +247,8 @@ classdef Buoys < PointCloudSegmentation
                 confidence = confidence / 2;
             end
 
-            if coder.target('MATLAB')
-                pcshow(buoyTformed)
-                hold on 
-                poseplot(quaternion(q),'Position',p,ScaleFactor=0.2);
-            end
+            pcshow(buoyTformed)
+           
         end
     end
 end
