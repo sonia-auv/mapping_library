@@ -3,7 +3,7 @@
 proc_mapping:
   # Preprocessing
   preprocessing:
-    min_intensity: 0.05
+    min_intensity: 0.02
     max_intensity: 1.0
     min_range: 0.1      # m
     max_range: 10.0     # m
@@ -26,9 +26,9 @@ proc_mapping:
       cluster_dist: 0.4       # m 
       plane_tol: 0.05
       icp_inlier_ratio: 0.1
-      z_normal_thres: 0.2
-      in_plane_thres: 0.4
-      min_area: 0.6           # m^2
+      z_normal_thres: 0.4
+      in_plane_thres: 0.35
+      min_area: 0.4          # m^2
       max_area: 3.5           # m^2
 
     hydro:

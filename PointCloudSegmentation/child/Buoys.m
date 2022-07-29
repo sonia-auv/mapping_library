@@ -23,7 +23,16 @@ classdef Buoys < PointCloudSegmentation
             this.PTlabels = uint32(zeros(1,this.filteredPT.Count));
 
             if coder.target('MATLAB')
-                this.buoyPT  = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01);    
+                buoy1 = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01);
+                buoy2 = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01); 
+                
+                T1 = rigid3d(quat2rotm([1,0,0,0]), [0, 0.450, 0]);
+                T2 = rigid3d(quat2rotm([1,0,0,0]), [0, -0.450, 0]);
+
+                buoy1 = pctransform(buoy1, T1);
+                buoy2 = pctransform(buoy2, T2);
+
+                this.buoyPT  = pccat([buoy1, buoy2]);
                 pcshow(this.filteredPT);
                 hold on
             else
@@ -48,6 +57,26 @@ classdef Buoys < PointCloudSegmentation
             for i =1  : numClusters
                 goodCluster(i) = this.analyseCluster(i);
             end
+            
+            % Getting the good cluster.
+            index = find(goodCluster == 1);
+            % get the good cluster
+            clusterLabels = this.PTlabels == index;
+            clusterPT =  select(this.filteredPT, clusterLabels);
+            
+            [p, q, confidence] = this.getBuoyPose(clusterPT, auvQuat)
+            obstacle.IsValid = true;
+            obstacle.Name = char('Buoys');
+            obstacle.Confidence = single(confidence);
+            obstacle.Pose.Position.X = p(1);
+            obstacle.Pose.Position.Y = p(2);
+            obstacle.Pose.Position.Z = p(3);
+            obstacle.Pose.Orientation.W = q(1);
+            obstacle.Pose.Orientation.X = q(2);
+            obstacle.Pose.Orientation.Y = q(3);
+            obstacle.Pose.Orientation.Z = q(4);
+            feature(1) = obstacle;
+            
 
             switch sum(goodCluster)
                 % Suspect 2 buyos in the same clusters
