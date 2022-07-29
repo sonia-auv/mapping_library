@@ -100,6 +100,7 @@ classdef RosNode
                     this.counter = 0;
                     this.param = this.getRosParams();
                     this.mPtBundler.setParam(this.param);
+                    this.mScBundler.setParam(this.param);
                 end
 
                 waitfor(spin);

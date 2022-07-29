@@ -71,6 +71,10 @@ classdef SoundCloudBundler < Bundler
                 freq = this.mStartSub.LatestMessage.Data;
             end
         end
+
+        function setParam(this, param)
+            this.setParam@Bundler(param);
+        end
     end
 
     %==============================================================================================
