@@ -79,9 +79,9 @@ classdef SoundCloudBundler < Bundler
     methods(Access = private)
         % Adding to the point cloud.
         function add2PtCloud(this, hydroMsg, poseMsg)
-            freq = getHydroFrequency()
-            % Thresholds to be validate.
-            if hydroMsg.Frequency > freq + 2 || hydroMsg.Frequency < freq - 2
+            freq = this.getHydroFrequency();
+            % Thresholds for a ping to be validate.
+            if hydroMsg.Frequency > freq + this.mParam.filter.hydro.freqThreshold || hydroMsg.Frequency < freq - this.mParam.filter.hydro.freqThreshold
                 return
             end
             if coder.target('MATLAB')
@@ -104,7 +104,7 @@ classdef SoundCloudBundler < Bundler
             quat = quatinv(quat);
             
             xyzi = zeros(1, 4);
-            hydro = this.hydroAngle2Cartesian(hydroMsg.Heading + deg2rad(30), hydroMsg.Elevation, poseMsg);
+            hydro = this.hydroAngle2Cartesian(hydroMsg.Heading + deg2rad(0), hydroMsg.Elevation, poseMsg);
             
             %apply puck rotation
             % hydro = quatrotate(eul2quat(deg2rad([-150,0,0]),'ZYX'),hydro.');

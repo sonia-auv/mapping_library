@@ -17,8 +17,8 @@ proc_mapping:
         nBinsToFilterOut: 25
     hydro:
       general:
-        box_size: 0.05  # m
-    max_range: 10.0         # m
+        box_size: 0.05      # m
+      freq_threshold: 1000  # Hz
 
   # Segmentation
   segmentation:
@@ -32,7 +32,7 @@ proc_mapping:
       max_area: 3.5           # m^2
 
     hydro:
-      cluster_dist: 1
+      cluster_dist: 1.0
 
   # Parameters
   parameters:

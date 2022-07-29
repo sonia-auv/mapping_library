@@ -119,6 +119,7 @@ classdef RosNode
             % General
             param.filter.sonar.general.boxSize = 0.05;
             param.filter.hydro.general.boxSize = 0.05;
+            param.filter.hydro.freqThreshold = 1000;
             param.filter.general.boxSize = 0.05;
             % Histogram
             param.filter.sonar.histogram_filter.nBin = 100;
@@ -161,6 +162,7 @@ classdef RosNode
             % General
             param.filter.sonar.general.boxSize = rosparams.getValue('/proc_mapping/filter/sonar/general/box_size', param.filter.sonar.general.boxSize);
             param.filter.hydro.general.boxSize = rosparams.getValue('/proc_mapping/filter/hydro/general/box_size', param.filter.hydro.general.boxSize);
+            param.filter.hydro.freqThreshold = rosparams.getValue('/proc_mapping/filter/hydro/freq_threshold', param.filter.hydro.freqThreshold);
             % Histogram
             param.filter.sonar.histogram_filter.nBin = rosparams.getValue('/proc_mapping/filter/sonar/histogram_filter/nBin', param.filter.sonar.histogram_filter.nBin);
             param.filter.sonar.histogram_filter.nBinsToFilterOut = rosparams.getValue('/proc_mapping/sonar/filter/histogram_filter/nBinsToFilterOut', param.filter.sonar.histogram_filter.nBinsToFilterOut);
