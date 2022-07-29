@@ -26,8 +26,8 @@ classdef SoundCloudBundler < Bundler
             this.mHydroPose  = [tx, ty, tz];
 
             % Subscribers
-            this.mHydroSub = rossubscriber('/proc_hydrophone/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
-            this.mStartSub = rossubscriber('/proc_mapping/hydro/start', 'std_msgs/Bool', @this.startCallback, "DataFormat", "struct");
+            this.mHydroSub = rossubscriber('/proc_simulation/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
+            this.mStartSub = rossubscriber('/proc_mapping/hydro/start', 'std_msgs/UInt16', @this.startCallback, "DataFormat", "struct");
             this.mStopSub = rossubscriber('/proc_mapping/hydro/stop', 'std_msgs/Bool', @this.stopCallback, "DataFormat", "struct");
             this.mClearBundleSub = rossubscriber('/proc_mapping/hydro/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct"); 
             this.i=1;  
@@ -63,6 +63,14 @@ classdef SoundCloudBundler < Bundler
             out = true;
             return;
         end
+
+        %% Getters / Setters
+        function freq = getHydroFrequency(this)
+            freq = 0;
+            if ~isempty(this.mStartSub.LatestMessage)
+                freq = this.mStartSub.LatestMessage.Data;
+            end
+        end
     end
 
     %==============================================================================================
@@ -71,6 +79,11 @@ classdef SoundCloudBundler < Bundler
     methods(Access = private)
         % Adding to the point cloud.
         function add2PtCloud(this, hydroMsg, poseMsg)
+            freq = getHydroFrequency()
+            % Thresholds to be validate.
+            if hydroMsg.Frequency > freq + 2 || hydroMsg.Frequency < freq - 2
+                return
+            end
             if coder.target('MATLAB')
                 fprintf('INFO : proc mapping : hydro : Append to point cloud. \n');
             end
