@@ -26,8 +26,8 @@ classdef Buoys < PointCloudSegmentation
                 buoy1 = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01);
                 buoy2 = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01); 
                 
-                T1 = rigid3d(quat2rotm([1,0,0,0]), [0, 0.450, 0]);
-                T2 = rigid3d(quat2rotm([1,0,0,0]), [0, -0.450, 0]);
+                T1 = rigid3d(quat2rotm([1,0,0,0]), [0, this.param.segmentation.buoys.gap/2, 0]);
+                T2 = rigid3d(quat2rotm([1,0,0,0]), [0, -this.param.segmentation.buoys.gap/2, 0]);
 
                 buoy1 = pctransform(buoy1, T1);
                 buoy2 = pctransform(buoy2, T2);
@@ -71,7 +71,7 @@ classdef Buoys < PointCloudSegmentation
 
             offset = quatrotate(quatinv(q),[0,0.450,0]);
 
-
+            disp('pannel #1')
             obstacle.Pose.Position.X = p(1) + offset
             obstacle.Pose.Position.Y = p(2) + offset
             obstacle.Pose.Position.Z = p(3) + offset
@@ -81,7 +81,7 @@ classdef Buoys < PointCloudSegmentation
             obstacle.Pose.Orientation.Z = q(4);
             
             feature(1) = obstacle;
-
+            disp('pannel #2')
             obstacle.Pose.Position.X = p(1) - offset
             obstacle.Pose.Position.Y = p(2) - offset
             obstacle.Pose.Position.Z = p(3) - offset

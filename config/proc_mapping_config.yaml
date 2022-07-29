@@ -30,6 +30,7 @@ proc_mapping:
       in_plane_thres: 0.35
       min_area: 0.4          # m^2
       max_area: 3.5           # m^2
+      gap : 0.025
 
     hydro:
       cluster_dist: 1.0
@@ -37,7 +38,7 @@ proc_mapping:
   # Parameters
   parameters:
     hydro:
-      pinger_depth: 5.0  # m
+      pinger_depth: 3.250  # m
       translation:
         x: 0.115    # m
         y: 0        # m 

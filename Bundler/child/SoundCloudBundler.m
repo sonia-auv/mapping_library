@@ -26,7 +26,7 @@ classdef SoundCloudBundler < Bundler
             this.mHydroPose  = [tx, ty, tz];
 
             % Subscribers
-            this.mHydroSub = rossubscriber('/proc_simulation/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
+            this.mHydroSub = rossubscriber('/proc_hydrophone/ping', 'sonia_common/PingAngles', @this.hydroCallback, "DataFormat", "struct");
             this.mStartSub = rossubscriber('/proc_mapping/hydro/start', 'std_msgs/UInt16', @this.startCallback, "DataFormat", "struct");
             this.mStopSub = rossubscriber('/proc_mapping/hydro/stop', 'std_msgs/Bool', @this.stopCallback, "DataFormat", "struct");
             this.mClearBundleSub = rossubscriber('/proc_mapping/hydro/clear_bundle', 'std_msgs/Bool', @this.clearBundleCallback, "DataFormat", "struct"); 
@@ -104,7 +104,7 @@ classdef SoundCloudBundler < Bundler
             quat = quatinv(quat);
             
             xyzi = zeros(1, 4);
-            hydro = this.hydroAngle2Cartesian(hydroMsg.Heading + deg2rad(0), hydroMsg.Elevation, poseMsg);
+            hydro = this.hydroAngle2Cartesian(hydroMsg.Heading + deg2rad(210), hydroMsg.Elevation, poseMsg);
             
             %apply puck rotation
             % hydro = quatrotate(eul2quat(deg2rad([-150,0,0]),'ZYX'),hydro.');

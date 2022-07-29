@@ -134,7 +134,9 @@ classdef RosNode
             param.segmentation.buoys.inPlaneThres = 0.4;
             param.segmentation.buoys.minArea = 0.6;
             param.segmentation.buoys.maxArea = 2.5;
+            param.segmentation.buoys.gap = 0.025;
 
+            
             % Hydro
             param.segmentation.hydro.clusterDist = 0.5;
 
@@ -176,6 +178,7 @@ classdef RosNode
             param.segmentation.buoys.inPlaneThres = rosparams.getValue('/proc_mapping/segmentation/buoys/in_plane_thres', param.segmentation.buoys.inPlaneThres);
             param.segmentation.buoys.minArea = rosparams.getValue('/proc_mapping/segmentation/buoys/min_area', param.segmentation.buoys.minArea);
             param.segmentation.buoys.maxArea = rosparams.getValue('/proc_mapping/segmentation/buoys/max_area', param.segmentation.buoys.maxArea);
+            param.segmentation.buoys.gap = rosparams.getValue('/proc_mapping/segmentation/buoys/gap', param.segmentation.buoys.gap);
         
             % Hydro
             param.segmentation.hydro.clusterDist = rosparams.getValue('/proc_mapping/segmentation/hydro/cluster_dist', param.segmentation.hydro.clusterDist);
