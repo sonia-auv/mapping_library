@@ -4,4 +4,4 @@ proc_mapping:
   # Segmentation
   segmentation:
     buoys:
-      cluster_dist: 0.4       # m
+      cluster_dist: 1.0       # m
