@@ -19,9 +19,7 @@ classdef PointCloudSegmentation
     end
     
     methods (Abstract, Access = public )
-        
-        feature = SegementByAtribute(this, quat);
-      
+        feature = SegementByAtribute(this, pose);
     end
 
     methods(Access = protected)

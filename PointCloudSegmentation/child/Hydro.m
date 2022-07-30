@@ -18,7 +18,7 @@ classdef Hydro < PointCloudSegmentation
             this.param = param;
         end
         
-        function feature = SegementByAtribute(this, auvQuat)            
+        function feature = SegementByAtribute(this, auvPose)            
             [labels, numClusters] = pcsegdist(this.filteredPT, this.param.clusterDist);
             
             % Get the biggest point cluster.

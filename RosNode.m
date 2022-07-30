@@ -68,8 +68,8 @@ classdef RosNode
                         switch upper(this.mPtBundler.getBundleName())
                             case 'BUOYS'
                                 buoys = Buoys(filt, this.param.segmentation.buoys);
-                                [~, quat] = this.mPtBundler.getLastSubPose();
-                                this.obstacleArray.Obstacles(2:3) = buoys.SegementByAtribute(quat);
+                                [pose, quat] = this.mPtBundler.getLastSubPose();
+                                this.obstacleArray.Obstacles(2:3) = buoys.SegementByAtribute([pose, quat]);
                                 send(this.obstacleArrayPublisher, this.obstacleArray);
                         end
                     end
@@ -85,9 +85,9 @@ classdef RosNode
                         scFilter = GeneralFilter(this.param.filter.hydro.general);
                         filt = scFilter.filter(scBundle);
                         % Segment the point cloud and find the center.
-                        [~, quat] = this.mPtBundler.getLastSubPose();
+                        [pose, quat] = this.mPtBundler.getLastSubPose();
                         hydro = Hydro(filt, this.param.segmentation.hydro);
-                        this.obstacleArray.Obstacles(6) = hydro.SegementByAtribute(quat);
+                        this.obstacleArray.Obstacles(6) = hydro.SegementByAtribute([pose, quat]);
                         send(this.obstacleArrayPublisher, this.obstacleArray);
                     end
                 else

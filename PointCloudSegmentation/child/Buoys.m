@@ -23,11 +23,8 @@ classdef Buoys < PointCloudSegmentation
             this.PTlabels = uint32(zeros(1,this.filteredPT.Count));
 
             if coder.target('MATLAB')
-
                 % generate obstacle reference PT
                 buoy = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01);
-               
-
             else
                 buoysFile = coder.load('MAT/buoyXYZ.mat');
                 buoy = pointCloud(buoysFile.buoys);
@@ -42,13 +39,11 @@ classdef Buoys < PointCloudSegmentation
             buoy2 = pctransform(buoy, T2);
             this.buoyPT  = pccat([buoy1, buoy2]);
             
-
             this.buoyPT.Intensity = ones(this.buoyPT.Count,1)*0.1;
             this.buoyPT.Normal = zeros(this.buoyPT.Count,3);
-
         end
         
-        function feature = SegementByAtribute(this, auvQuat)            
+        function feature = SegementByAtribute(this, auvPose)            
             % Get clusters
             [this.PTlabels,numClusters] = pcsegdist(this.filteredPT,this.param.clusterDist);
             goodCluster = zeros(1, numClusters);
@@ -56,24 +51,29 @@ classdef Buoys < PointCloudSegmentation
             obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
             feature = repelem(obstacle, 2);
 
-            for i =1  : numClusters
+            % Get the good clusters.
+            for i = 1 : numClusters
                 goodCluster(i) = this.analyseCluster(i);
             end
-            
-            % Getting the good cluster.
-            index = find(goodCluster == 1);
-            % Get the good cluster
-            clusterLabels = this.PTlabels == index;
+
+            % Keep the closest cluster.
+            distances = zeros(1, sum(goodCluster));
+            for i = 1 : sum(goodCluster)
+                distances(i) = pdist([p(i).' ; auvPose(i).']);
+            end
+            [~, closestClusterId] = min(distances);
+
+            clusterLabels = this.PTlabels == closestClusterId;
             clusterPT =  select(this.filteredPT, clusterLabels);
             
-            [p, q, confidence] = this.getBuoyPose(clusterPT, auvQuat)
+            [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
             obstacle.IsValid = true;
             obstacle.Name = char('Buoys');
             obstacle.Confidence = single(confidence);
 
             offset = quatrotate(quatinv(q),[0,this.param.gap / 2, 0]);
 
-            disp('pannel #1')
+            disp('Panel #1');
             obstacle.Pose.Position.X = p(1) + offset
             obstacle.Pose.Position.Y = p(2) + offset
             obstacle.Pose.Position.Z = p(3) + offset
@@ -83,7 +83,7 @@ classdef Buoys < PointCloudSegmentation
             obstacle.Pose.Orientation.Z = q(4);
             
             feature(1) = obstacle;
-            disp('pannel #2')
+            disp('Panel #2');
             obstacle.Pose.Position.X = p(1) - offset
             obstacle.Pose.Position.Y = p(2) - offset
             obstacle.Pose.Position.Z = p(3) - offset
@@ -94,61 +94,6 @@ classdef Buoys < PointCloudSegmentation
                 poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
                 poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
             end
-            
-%             switch sum(goodCluster)
-%                 % Suspect 2 buyos in the same clusters
-%                 case 1
-%                     index = find(goodCluster == 1);
-%                     % get the good cluster
-%                     clusterLabels = this.PTlabels == index;
-%                     clusterPT =  select(this.filteredPT, clusterLabels);
-%                     
-%                     % split cluster with kmeans
-%                     kmeansIndex = kmeans(clusterPT.Location, 2);
-% 
-%                     % for each buoys
-%                     for i = 1 : 2
-%                         [p, q, confidence] = this.getBuoyPose(select(clusterPT, kmeansIndex == i), auvQuat)
-%                         obstacle.IsValid = true;
-%                         obstacle.Name = char('Buoys');
-%                         obstacle.Confidence = single(confidence);
-%                         obstacle.Pose.Position.X = p(1);
-%                         obstacle.Pose.Position.Y = p(2);
-%                         obstacle.Pose.Position.Z = p(3);
-%                         obstacle.Pose.Orientation.W = q(1);
-%                         obstacle.Pose.Orientation.X = q(2);
-%                         obstacle.Pose.Orientation.Y = q(3);
-%                         obstacle.Pose.Orientation.Z = q(4);
-%                         feature(i) = obstacle;
-%                     end
-% 
-%                 case 2
-%                     index = find(goodCluster == 1);
-%                     % for each buoys
-%                     for i = 1 : 2
-%                         clusterLabels = this.PTlabels == index(i);
-%                         [p, q, confidence] = this.getBuoyPose(select(this.filteredPT, clusterLabels), auvQuat) 
-%                         obstacle.IsValid = true;
-%                         obstacle.Name = char('Buoys');
-%                         obstacle.Confidence = single(confidence);
-%                         obstacle.Pose.Position.X = p(1);
-%                         obstacle.Pose.Position.Y = p(2);
-%                         obstacle.Pose.Position.Z = p(3);
-%                         obstacle.Pose.Orientation.W = q(1);
-%                         obstacle.Pose.Orientation.X = q(2);
-%                         obstacle.Pose.Orientation.Y = q(3);
-%                         obstacle.Pose.Orientation.Z = q(4);
-%                         feature(i) = obstacle;
-%                     end
-% 
-%                 % Nothing found
-%                 otherwise
-%                     for i = 1 : 2
-%                         feature(i).IsValid = false;
-% 
-%                     end
-%                     return
-%             end 
         end
     end
 
