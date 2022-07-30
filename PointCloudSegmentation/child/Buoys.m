@@ -27,13 +27,12 @@ classdef Buoys < PointCloudSegmentation
                 buoy = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01);
             else
                 buoysFile = coder.load('MAT/buoyXYZ.mat');
-                buoy = pointCloud(buoysFile.buoys);
-                
+                buoy = pointCloud(buoysFile.buoys);        
             end
 
             % apply offset gaps on  pannel 
             T1 = rigid3d(quat2rotm([1,0,0,0]), [0, this.param.gap / 2, 0]);
-            T2 = rigid3d(quat2rotm([1,0,0,0]), [0, -this.param.sgap / 2, 0]);
+            T2 = rigid3d(quat2rotm([1,0,0,0]), [0, -this.param.gap / 2, 0]);
 
             buoy1 = pctransform(buoy, T1);
             buoy2 = pctransform(buoy, T2);
@@ -49,7 +48,7 @@ classdef Buoys < PointCloudSegmentation
             goodCluster = zeros(1, numClusters);
 
             obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
-            feature = repelem(obstacle, 2);
+            clusters = repelem(obstacle, 2);
 
             % Get the good clusters.
             for i = 1 : numClusters
@@ -59,41 +58,43 @@ classdef Buoys < PointCloudSegmentation
             % Keep the closest cluster.
             distances = zeros(1, sum(goodCluster));
             for i = 1 : sum(goodCluster)
+                index = find(goodCluster == 1);
+                clusterLabels = this.PTlabels == index;
+                clusterPT =  select(this.filteredPT, clusterLabels);
+                
+                [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
                 distances(i) = pdist([p(i).' ; auvPose(i).']);
+                obstacle.IsValid = true;
+                obstacle.Name = char('Buoys');
+                obstacle.Confidence = single(confidence);
+    
+                offset = quatrotate(quatinv(q),[0,this.param.gap / 2, 0]);
+    
+                disp('Panel #1');
+                obstacle.Pose.Position.X = p(1) + offset;
+                obstacle.Pose.Position.Y = p(2) + offset;
+                obstacle.Pose.Position.Z = p(3) + offset;
+                obstacle.Pose.Orientation.W = q(1);
+                obstacle.Pose.Orientation.X = q(2);
+                obstacle.Pose.Orientation.Y = q(3);
+                obstacle.Pose.Orientation.Z = q(4);
+                
+                clusters(1) = obstacle;
+                disp('Panel #2');
+                obstacle.Pose.Position.X = p(1) - offset;
+                obstacle.Pose.Position.Y = p(2) - offset;
+                obstacle.Pose.Position.Z = p(3) - offset;
+                clusters(2) = obstacle;
+    
+                if coder.target('MATLAB')
+                    hold on 
+                    poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
+                    poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
+                end
             end
             [~, closestClusterId] = min(distances);
-
-            clusterLabels = this.PTlabels == closestClusterId;
-            clusterPT =  select(this.filteredPT, clusterLabels);
-            
-            [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
-            obstacle.IsValid = true;
-            obstacle.Name = char('Buoys');
-            obstacle.Confidence = single(confidence);
-
-            offset = quatrotate(quatinv(q),[0,this.param.gap / 2, 0]);
-
-            disp('Panel #1');
-            obstacle.Pose.Position.X = p(1) + offset
-            obstacle.Pose.Position.Y = p(2) + offset
-            obstacle.Pose.Position.Z = p(3) + offset
-            obstacle.Pose.Orientation.W = q(1);
-            obstacle.Pose.Orientation.X = q(2);
-            obstacle.Pose.Orientation.Y = q(3);
-            obstacle.Pose.Orientation.Z = q(4);
-            
-            feature(1) = obstacle;
-            disp('Panel #2');
-            obstacle.Pose.Position.X = p(1) - offset
-            obstacle.Pose.Position.Y = p(2) - offset
-            obstacle.Pose.Position.Z = p(3) - offset
-            feature(2) = obstacle;
-
-            if coder.target('MATLAB')
-                hold on 
-                poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
-                poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
-            end
+            feature = repelem(obstacle, 1);
+            feature(1) = clusters(closestClusterId);
         end
     end
 
@@ -159,6 +160,7 @@ classdef Buoys < PointCloudSegmentation
             
             % Get ransac plane pose approximation 
             [pApprox,qApprox] = this.getOrientedPointOnPlanarFace(model, subPT);
+            poseplot(quaternion(qApprox),'Position',pApprox,ScaleFactor=0.2);
             
             % Transform the buoy on the plane.
             tformRansac = rigid3d(quat2rotm(quatinv(qApprox)), pApprox);
