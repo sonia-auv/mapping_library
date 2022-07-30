@@ -58,9 +58,9 @@ classdef Buoys < PointCloudSegmentation
             % Keep the closest cluster.
             distances = zeros(1, sum(goodCluster));
             for i = 1 : sum(goodCluster)
-                index = find(goodCluster == 1);
+                index = find(goodCluster == i);
                 clusterLabels = this.PTlabels == index;
-                clusterPT =  select(this.filteredPT, clusterLabels);
+                clusterPT = select(this.filteredPT, clusterLabels);
                 
                 [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
                 distances(i) = pdist([p(i).' ; auvPose(i).']);
