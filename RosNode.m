@@ -15,7 +15,7 @@ classdef RosNode
         mScBundler;
 
         paramUpdateRate;
-        counter;
+        rosParamCounter;
         rate;
 
         obstacleArray;
@@ -26,7 +26,7 @@ classdef RosNode
         function this = RosNode(rate)
             % ROS Publishers
             this.outputCloudPublisher = rospublisher("/proc_mapping/output","sensor_msgs/PointCloud2","DataFormat","struct");
-            this.obstacleArrayPublisher = rospublisher("/proc_mapping/obstacle_infos","sonia_common/ObstacleArray","DataFormat","struct");
+            this.obstacleArrayPublisher = rospublisher("/proc_mapping/obstacle_infos","sonia_common/ObstacleArray","DataFormat","struct", "IsLatching", true);
 
             obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
             this.obstacleArray =  rosmessage("sonia_common/ObstacleArray", "DataFormat", "struct");
@@ -34,9 +34,8 @@ classdef RosNode
 
             % ROS parameters
             this.param = this.getRosParams();
-            
             this.paramUpdateRate = 2; % seconds
-            this.counter = 0;
+            this.rosParamCounter = 0;
             this.rate = rate;
         end
         
@@ -95,13 +94,13 @@ classdef RosNode
                 end
 
                 % Update ROS parameters
-                this.counter = this.counter + 1;
-                if this.counter >= this.rate * this.paramUpdateRate
-                    this.counter = 0;
+                this.rosParamCounter = this.rosParamCounter + 1;
+                if this.rosParamCounter >= this.rate * this.paramUpdateRate
+                    this.rosParamCounter = 0;
                     this.param = this.getRosParams();
                     this.mPtBundler.setParam(this.param);
                     this.mScBundler.setParam(this.param);
-                end
+                end            
 
                 waitfor(spin);
             end
