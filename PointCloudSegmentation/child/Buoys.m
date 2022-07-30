@@ -48,53 +48,60 @@ classdef Buoys < PointCloudSegmentation
             goodCluster = zeros(1, numClusters);
 
             obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
-            clusters = repelem(obstacle, 2);
+            feature = repelem(obstacle, 2);
 
             % Get the good clusters.
             for i = 1 : numClusters
                 goodCluster(i) = this.analyseCluster(i);
             end
-
-            % Keep the closest cluster.
+            
             distances = zeros(1, sum(goodCluster));
             for i = 1 : sum(goodCluster)
-                index = find(goodCluster == i);
-                clusterLabels = this.PTlabels == index;
+                index = find(goodCluster == 1);
+                clusterLabels = this.PTlabels == index(i);
                 clusterPT = select(this.filteredPT, clusterLabels);
                 
                 [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
-                distances(i) = pdist([p(i).' ; auvPose(i).']);
-                obstacle.IsValid = true;
-                obstacle.Name = char('Buoys');
-                obstacle.Confidence = single(confidence);
-    
-                offset = quatrotate(quatinv(q),[0,this.param.gap / 2, 0]);
-    
-                disp('Panel #1');
-                obstacle.Pose.Position.X = p(1) + offset;
-                obstacle.Pose.Position.Y = p(2) + offset;
-                obstacle.Pose.Position.Z = p(3) + offset;
-                obstacle.Pose.Orientation.W = q(1);
-                obstacle.Pose.Orientation.X = q(2);
-                obstacle.Pose.Orientation.Y = q(3);
-                obstacle.Pose.Orientation.Z = q(4);
-                
-                clusters(1) = obstacle;
-                disp('Panel #2');
-                obstacle.Pose.Position.X = p(1) - offset;
-                obstacle.Pose.Position.Y = p(2) - offset;
-                obstacle.Pose.Position.Z = p(3) - offset;
-                clusters(2) = obstacle;
-    
-                if coder.target('MATLAB')
-                    hold on 
-                    poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
-                    poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
-                end
+                distances(i) = pdist([p(1:3) ; auvPose(1:3)]);
             end
             [~, closestClusterId] = min(distances);
-            feature = repelem(obstacle, 1);
-            feature(1) = clusters(closestClusterId);
+            goodCluster = zeros(1, numClusters);
+            goodCluster(closestClusterId) = 1;
+
+            % Keep the closest cluster.
+            index = find(goodCluster == 1);
+            clusterLabels = this.PTlabels == index;
+            clusterPT = select(this.filteredPT, clusterLabels);
+            
+            [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
+            distances(i) = pdist([p(1:3) ; auvPose(1:3)]);
+            obstacle.IsValid = true;
+            obstacle.Name = char('Buoys');
+            obstacle.Confidence = single(confidence);
+
+            offset = quatrotate(quatinv(q),[0,this.param.gap / 2, 0]);
+
+            disp('Panel #1');
+            obstacle.Pose.Position.X = p(1) + offset;
+            obstacle.Pose.Position.Y = p(2) + offset;
+            obstacle.Pose.Position.Z = p(3) + offset;
+            obstacle.Pose.Orientation.W = q(1);
+            obstacle.Pose.Orientation.X = q(2);
+            obstacle.Pose.Orientation.Y = q(3);
+            obstacle.Pose.Orientation.Z = q(4);
+            
+            feature(1) = obstacle;
+            disp('Panel #2');
+            obstacle.Pose.Position.X = p(1) - offset;
+            obstacle.Pose.Position.Y = p(2) - offset;
+            obstacle.Pose.Position.Z = p(3) - offset;
+            feature(2) = obstacle;
+
+            if coder.target('MATLAB')
+                hold on 
+                poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
+                poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
+            end
         end
     end
 
