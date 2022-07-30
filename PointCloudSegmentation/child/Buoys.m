@@ -23,23 +23,25 @@ classdef Buoys < PointCloudSegmentation
             this.PTlabels = uint32(zeros(1,this.filteredPT.Count));
 
             if coder.target('MATLAB')
-                buoy1 = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01);
-                buoy2 = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01); 
-                
-                T1 = rigid3d(quat2rotm([1,0,0,0]), [0, this.param.segmentation.buoys.gap/2, 0]);
-                T2 = rigid3d(quat2rotm([1,0,0,0]), [0, -this.param.segmentation.buoys.gap/2, 0]);
 
-                buoy1 = pctransform(buoy1, T1);
-                buoy2 = pctransform(buoy2, T2);
+                % generate obstacle reference PT
+                buoy = pcdownsample(pcread('buoy.ply'),'gridAverage',0.01);
+               
 
-                this.buoyPT  = pccat([buoy1, buoy2]);
-                pcshow(this.filteredPT);
-                hold on
             else
                 buoysFile = coder.load('MAT/buoyXYZ.mat');
-                this.buoyPT = pointCloud(buoysFile.buoys);
+                buoy = pointCloud(buoysFile.buoys);
                 
             end
+
+            % apply offset gaps on  pannel 
+            T1 = rigid3d(quat2rotm([1,0,0,0]), [0, this.param.gap / 2, 0]);
+            T2 = rigid3d(quat2rotm([1,0,0,0]), [0, -this.param.sgap / 2, 0]);
+
+            buoy1 = pctransform(buoy, T1);
+            buoy2 = pctransform(buoy, T2);
+            this.buoyPT  = pccat([buoy1, buoy2]);
+            
 
             this.buoyPT.Intensity = ones(this.buoyPT.Count,1)*0.1;
             this.buoyPT.Normal = zeros(this.buoyPT.Count,3);
@@ -69,7 +71,7 @@ classdef Buoys < PointCloudSegmentation
             obstacle.Name = char('Buoys');
             obstacle.Confidence = single(confidence);
 
-            offset = quatrotate(quatinv(q),[0,0.450,0]);
+            offset = quatrotate(quatinv(q),[0,this.param.gap / 2, 0]);
 
             disp('pannel #1')
             obstacle.Pose.Position.X = p(1) + offset
@@ -221,7 +223,6 @@ classdef Buoys < PointCloudSegmentation
             tformICP = pcregistericp(buoyTformed , plane,"InlierRatio",this.param.icpInlierRatio);
 
             % Get buoys transformation.
-            %tformBuoy = rigid3d(tformRansac.T);
             tformBuoy = rigid3d(tformRansac.T * tformICP.T);
             
             % Verify plane confidence
