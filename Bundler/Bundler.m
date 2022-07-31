@@ -15,7 +15,7 @@ classdef Bundler < handle
 
         % ROS params
         mParam;
-
+        qUtils;
         mBundle;
     end
 
@@ -23,6 +23,7 @@ classdef Bundler < handle
         function this = Bundler(param)
             this.mPoseSub = rossubscriber('/proc_nav/auv_states', 'nav_msgs/Odometry', "DataFormat", "struct");
             this.mParam = param;
+            this.qUtils = quatUtilities();
 
             % Graphics functions 
             if coder.target('MATLAB')
