@@ -73,18 +73,17 @@ classdef Buoys < PointCloudSegmentation
             clusterLabels = this.PTlabels == index;
             clusterPT = select(this.filteredPT, clusterLabels);
             
-            [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
-            distances(i) = pdist([p(1:3) ; auvPose(1:3)]);
+            [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7));
             obstacle.IsValid = true;
             obstacle.Name = char('Buoys');
             obstacle.Confidence = single(confidence);
 
-            offset = quatrotate(quatinv(q),[0,this.param.gap / 2, 0]);
+            offset = this.qUtils.quatRotation([0,this.param.gap / 2, 0],quatinv(q));
 
             disp('Panel #1');
-            obstacle.Pose.Position.X = p(1) + offset;
-            obstacle.Pose.Position.Y = p(2) + offset;
-            obstacle.Pose.Position.Z = p(3) + offset;
+            obstacle.Pose.Position.X = p(1) + offset(1);
+            obstacle.Pose.Position.Y = p(2) + offset(2);
+            obstacle.Pose.Position.Z = p(3) + offset(3);
             obstacle.Pose.Orientation.W = q(1);
             obstacle.Pose.Orientation.X = q(2);
             obstacle.Pose.Orientation.Y = q(3);
@@ -92,9 +91,9 @@ classdef Buoys < PointCloudSegmentation
             
             feature(1) = obstacle;
             disp('Panel #2');
-            obstacle.Pose.Position.X = p(1) - offset;
-            obstacle.Pose.Position.Y = p(2) - offset;
-            obstacle.Pose.Position.Z = p(3) - offset;
+            obstacle.Pose.Position.X = p(1) - offset(1);
+            obstacle.Pose.Position.Y = p(2) - offset(2);
+            obstacle.Pose.Position.Z = p(3) - offset(3);
             feature(2) = obstacle;
 
             if coder.target('MATLAB')
@@ -167,7 +166,6 @@ classdef Buoys < PointCloudSegmentation
             
             % Get ransac plane pose approximation 
             [pApprox,qApprox] = this.getOrientedPointOnPlanarFace(model, subPT);
-            poseplot(quaternion(qApprox),'Position',pApprox,ScaleFactor=0.2);
             
             % Transform the buoy on the plane.
             tformRansac = rigid3d(quat2rotm(quatinv(qApprox)), pApprox);
@@ -202,7 +200,7 @@ classdef Buoys < PointCloudSegmentation
                 confidence = confidence / 2;
             end
 
-            pcshow(buoyTformed)
+            %pcshow(buoyTformed)
            
         end
     end

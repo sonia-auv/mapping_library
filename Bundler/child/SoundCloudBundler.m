@@ -7,6 +7,7 @@ classdef SoundCloudBundler < Bundler
         mHydroSub;
         mHydroPose;
         
+        
     end
     
     properties
@@ -18,7 +19,9 @@ classdef SoundCloudBundler < Bundler
         function this = SoundCloudBundler(param) 
             this@Bundler(param); 
 
-            this.mBundle = zeros(1, 4);
+             % Gettho way to enable dynamic allocation
+             this.mBundle = zeros(3, 4);
+             this.mBundle = zeros(1, 4);
 
             tx = param.parameters.hydro.translation.x;
             ty = param.parameters.hydro.translation.y;
@@ -68,7 +71,7 @@ classdef SoundCloudBundler < Bundler
         function freq = getHydroFrequency(this)
             freq = 0;
             if ~isempty(this.mStartSub.LatestMessage)
-                freq = this.mStartSub.LatestMessage.Data;
+                freq = double(this.mStartSub.LatestMessage.Data);
             end
         end
 
@@ -129,13 +132,14 @@ classdef SoundCloudBundler < Bundler
         end  
         
         function pose = hydroAngle2Cartesian(this, phi, theta, poseMsg)
+            quat = [1, 0, 0, 0];
             quat(1) = poseMsg.Orientation.W;
             quat(2) = poseMsg.Orientation.X;
             quat(3) = poseMsg.Orientation.Y;
             quat(4) = poseMsg.Orientation.Z;
 
             % Trouver la valeur de z
-            lever = quatrotate(quatinv(quat),this.mHydroPose);
+            lever = this.qUtils.quatRotation(this.mHydroPose, quatinv(quat));
             z = this.mParam.parameters.hydro.pingerDepth -  poseMsg.Position.Z  + lever(3);
 
             rho = z/cos(theta);
