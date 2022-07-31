@@ -1,8 +1,9 @@
-mat = load('tables.mat');
+mat = load('Table1.mat');
 rawPT = mat.filt;
 
 clusterDist = 0.5;
 topAreaMin = 0.6;
+topAreaMax = 2.5;
 tablesDepth = 1;
 
 % Filtered point cloud.
@@ -26,8 +27,8 @@ for i = 1:numClusters
 
     % Calculate top area.
     topArea = model.Dimensions(1) * model.Dimensions(2);
-
-    if topArea >= topAreaMin
+    model.Dimensions
+    if topArea >= topAreaMin && topArea <= topAreaMax 
         goodClusters(i) = 1;
     end
 end
@@ -35,7 +36,7 @@ end
 poses = zeros(sum(goodClusters), 7);
 
 for i = 1:sum(goodClusters)
-    index = find(goodCluster == 1);
+    index = find(goodClusters == 1);
     clusterLabels = labels == index(i);
     clusterPT = select(filteredPT, clusterLabels);
     p = zeros(1, 3);
