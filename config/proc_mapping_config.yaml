@@ -31,7 +31,14 @@ proc_mapping:
       min_area: 0.4          # m^2
       max_area: 3.5           # m^2
       gap : 0.8
-
+    tables:
+      cluster_dist: 0.5
+      top_area_min: 0.6
+      top_area_max: 2.5
+      pose_depth: 1.0
+      max_between_dist: 4.0  # m
+      max_between_angle: 0.3 # rad
+      squareness_ratio: 0.3 
     hydro:
       cluster_dist: 1.0
 

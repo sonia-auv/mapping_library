@@ -70,6 +70,12 @@ classdef RosNode
                                 [pose, quat] = this.mPtBundler.getLastSubPose();
                                 this.obstacleArray.Obstacles(2:3) = buoys.SegementByAtribute([pose, quat]);
                                 send(this.obstacleArrayPublisher, this.obstacleArray);
+                            
+                            case 'TABLES'
+                                tables = Tables(filt, this.param.segmentation.tables);
+                                [pose, quat] = this.mPtBundler.getLastSubPose();
+                                this.obstacleArray.Obstacles(7) = tables.SegementByAtribute([pose, quat]);
+                                send(this.obstacleArrayPublisher, this.obstacleArray);
                         end
                     end
                 else
@@ -136,6 +142,14 @@ classdef RosNode
             param.segmentation.buoys.maxArea = 2.5;
             param.segmentation.buoys.gap = 0.025;
 
+            % Tables
+            param.segmentation.tables.clusterDist = 0.5;
+            param.segmentation.tables.topAreaMin = 0.6;
+            param.segmentation.tables.topAreaMax = 2.0;
+            param.segmentation.tables.poseDepth = 1.0;
+            param.segmentation.tables.maxBetweenDist = 4.0;
+            param.segmentation.tables.maxBetweenAngle = 0.3;  % rad
+            param.segmentation.tables.squarenessRatio = 0.3;  
             
             % Hydro
             param.segmentation.hydro.clusterDist = 0.5;
@@ -179,7 +193,16 @@ classdef RosNode
             param.segmentation.buoys.minArea = rosparams.getValue('/proc_mapping/segmentation/buoys/min_area', param.segmentation.buoys.minArea);
             param.segmentation.buoys.maxArea = rosparams.getValue('/proc_mapping/segmentation/buoys/max_area', param.segmentation.buoys.maxArea);
             param.segmentation.buoys.gap = rosparams.getValue('/proc_mapping/segmentation/buoys/gap', param.segmentation.buoys.gap);
-        
+            
+            % Tables
+            param.segmentation.tables.clusterDist = rosparams.getValue('/proc_mapping/segmentation/tables/cluster_dist', param.segmentation.tables.clusterDist);
+            param.segmentation.tables.topAreaMin = rosparams.getValue('/proc_mapping/segmentation/tables/top_area_min', param.segmentation.tables.topAreaMin);
+            param.segmentation.tables.topAreaMax = rosparams.getValue('/proc_mapping/segmentation/tables/top_area_max', param.segmentation.tables.topAreaMax);
+            param.segmentation.tables.poseDepth = rosparams.getValue('/proc_mapping/segmentation/tables/pose_depth', param.segmentation.tables.poseDepth);
+            param.segmentation.tables.maxBetweenDist = rosparams.getValue('/proc_mapping/segmentation/tables/max_between_dist', param.segmentation.tables.maxBetweenDist);
+            param.segmentation.tables.maxBetweenAngle = rosparams.getValue('/proc_mapping/segmentation/tables/max_between_angle', param.segmentation.tables.maxBetweenAngle);
+            param.segmentation.tables.squarenessRatio = rosparams.getValue('/proc_mapping/segmentation/tables/squareness_ratio', param.segmentation.tables.squarenessRatio);
+
             % Hydro
             param.segmentation.hydro.clusterDist = rosparams.getValue('/proc_mapping/segmentation/hydro/cluster_dist', param.segmentation.hydro.clusterDist);
 
