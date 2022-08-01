@@ -55,51 +55,62 @@ classdef Buoys < PointCloudSegmentation
                 goodCluster(i) = this.analyseCluster(i);
             end
             
-            distances = zeros(1, sum(goodCluster));
-            for i = 1 : sum(goodCluster)
+            % One or more clusters found.
+            if sum(goodCluster)
+                distances = zeros(1, sum(goodCluster));
+                for i = 1 : sum(goodCluster)
+                    index = find(goodCluster == 1);
+                    clusterLabels = this.PTlabels == index(i);
+                    clusterPT = select(this.filteredPT, clusterLabels);
+                    
+                    [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
+                    distances(i) = pdist([p(1:3) ; auvPose(1:3)]);
+                end
+                [~, closestClusterId] = min(distances);
+                goodCluster = zeros(1, numClusters);
+                goodCluster(closestClusterId) = 1;
+    
+                % Keep the closest cluster.
                 index = find(goodCluster == 1);
-                clusterLabels = this.PTlabels == index(i);
+                clusterLabels = this.PTlabels == index;
                 clusterPT = select(this.filteredPT, clusterLabels);
+
+                [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7));
+                obstacle.IsValid = true;
+                obstacle.Name = char('Buoys');
+                obstacle.Confidence = single(confidence);
+    
+                offset = this.qUtils.quatRotation([0,this.param.gap / 2, 0], quatinv(q));
+    
+                disp('Panel #1');
+                obstacle.Pose.Position.X = p(1) + offset(1);
+                obstacle.Pose.Position.Y = p(2) + offset(2);
+                obstacle.Pose.Position.Z = p(3) + offset(3);
+                obstacle.Pose.Orientation.W = q(1);
+                obstacle.Pose.Orientation.X = q(2);
+                obstacle.Pose.Orientation.Y = q(3);
+                obstacle.Pose.Orientation.Z = q(4);
                 
-                [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7))
-                distances(i) = pdist([p(1:3) ; auvPose(1:3)]);
-            end
-            [~, closestClusterId] = min(distances);
-            goodCluster = zeros(1, numClusters);
-            goodCluster(closestClusterId) = 1;
+                feature(1) = obstacle;
+                disp('Panel #2');
+                obstacle.Pose.Position.X = p(1) - offset(1);
+                obstacle.Pose.Position.Y = p(2) - offset(2);
+                obstacle.Pose.Position.Z = p(3) - offset(3);
+                feature(2) = obstacle;
+    
+                if coder.target('MATLAB')
+                    hold on 
+                    poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
+                    poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
+                end
+            % No clusters found.
+            else
+                obstacle.IsValid = false;
+                obstacle.Name = char('Buoys');
+                obstacle.Confidence = single(0);
+                feature(1) = obstacle;
 
-            % Keep the closest cluster.
-            index = find(goodCluster == 1);
-            clusterLabels = this.PTlabels == index;
-            clusterPT = select(this.filteredPT, clusterLabels);
-            
-            [p, q, confidence] = this.getBuoyPose(clusterPT, auvPose(4:7));
-            obstacle.IsValid = true;
-            obstacle.Name = char('Buoys');
-            obstacle.Confidence = single(confidence);
-
-            offset = this.qUtils.quatRotation([0,this.param.gap / 2, 0],quatinv(q));
-
-            disp('Panel #1');
-            obstacle.Pose.Position.X = p(1) + offset(1);
-            obstacle.Pose.Position.Y = p(2) + offset(2);
-            obstacle.Pose.Position.Z = p(3) + offset(3);
-            obstacle.Pose.Orientation.W = q(1);
-            obstacle.Pose.Orientation.X = q(2);
-            obstacle.Pose.Orientation.Y = q(3);
-            obstacle.Pose.Orientation.Z = q(4);
-            
-            feature(1) = obstacle;
-            disp('Panel #2');
-            obstacle.Pose.Position.X = p(1) - offset(1);
-            obstacle.Pose.Position.Y = p(2) - offset(2);
-            obstacle.Pose.Position.Z = p(3) - offset(3);
-            feature(2) = obstacle;
-
-            if coder.target('MATLAB')
-                hold on 
-                poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
-                poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
+                feature(2) = obstacle;
             end
         end
     end

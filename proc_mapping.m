@@ -7,7 +7,7 @@ function proc_mapping
             % partir le node ros matlab 
             rosinit;
         end
-        system("rosparam load ./config/proc_mapping_config.yaml");
+        system("rosparam load ./config/AUV8.yaml");
         fprintf('INFO : proc mapping : Ros param loaded. \n');
     end
 

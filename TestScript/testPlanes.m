@@ -45,7 +45,7 @@ function [p,q] = getOrientedPoint(model, plane)
     
     theta = atan(norm(c) / dot(v1,model.Normal));
     
-    q = [ cos(theta / 2), n * sin(theta / 2)]
+    q = [ cos(theta / 2), n * sin(thetplane1a / 2)]
     
     
     p(1) = (plane.XLimits(2)-plane.XLimits(1))/2 + plane.XLimits(1)

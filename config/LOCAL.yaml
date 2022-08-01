@@ -1,0 +1,57 @@
+# Proc Mapping parameters
+
+proc_mapping:
+  # Preprocessing
+  preprocessing:
+    min_intensity: 0.02
+    max_intensity: 1.0
+    min_range: 0.1      # m
+    max_range: 10.0     # m
+
+  filter:
+    sonar:
+      general:
+        box_size: 0.05  # m 
+      histogram_filter:
+        nBin: 100
+        nBinsToFilterOut: 25
+    hydro:
+      general:
+        box_size: 0.05      # m
+      freq_threshold: 1000  # Hz
+
+  # Segmentation
+  segmentation:
+    buoys:
+      cluster_dist: 1.0       # m 
+      plane_tol: 0.05
+      icp_inlier_ratio: 0.1
+      z_normal_thres: 0.4
+      in_plane_thres: 0.35
+      min_area: 0.4          # m^2
+      max_area: 4.5           # m^2
+      gap : 0.8
+    tables:
+      cluster_dist: 0.5
+      top_area_min: 0.6
+      top_area_max: 2.5
+      pose_depth: 1.0
+      max_between_dist: 4.0  # m
+      max_between_angle: 0.3 # rad
+      squareness_ratio: 0.3 
+    hydro:
+      cluster_dist: 1.0
+
+  # Parameters
+  parameters:
+    hydro:
+      pinger_depth: 3.250  # m
+      translation:
+        x: 0.115    # m
+        y: 0        # m 
+        z: 0.118    # m
+    sonar:
+      translation:
+        x: 0.358    # m
+        y: 0        # m
+        z: -0.118   # m

@@ -1,7 +1,0 @@
-# Proc Mapping parameters
-
-proc_mapping:
-  # Segmentation
-  segmentation:
-    buoys:
-      cluster_dist: 1.0       # m
