@@ -86,7 +86,7 @@ classdef Tables < PointCloudSegmentation
             % potential clusters only. 
             if sum(goodClusters) == 25
                 distance = pdist([poses(1, 1:3);poses(2, 1:3)]);
-                if distance > maxBetweenDist
+                if distance > this.param.maxBetweenDist
                     confidence = 0.25 * confidence;
                 end
             end 
