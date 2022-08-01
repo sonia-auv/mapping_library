@@ -80,7 +80,7 @@ classdef Buoys < PointCloudSegmentation
                 obstacle.Name = char('Buoys');
                 obstacle.Confidence = single(confidence);
     
-                offset = this.qUtils.quatRotation([0,this.param.gap / 2, 0], quatinv(q));
+                offset = this.qUtils.quatRotation([0,this.param.gap / 2, 0], q);
     
                 disp('Panel #1');
                 obstacle.Pose.Position.X = p(1) + offset(1);
@@ -100,6 +100,7 @@ classdef Buoys < PointCloudSegmentation
     
                 if coder.target('MATLAB')
                     hold on 
+                    poseplot(quaternion(q),'Position',p,ScaleFactor=0.2);
                     poseplot(quaternion(q),'Position',p + offset,ScaleFactor=0.2);
                     poseplot(quaternion(q),'Position',p - offset,ScaleFactor=0.2);
                 end
@@ -179,7 +180,7 @@ classdef Buoys < PointCloudSegmentation
             [pApprox,qApprox] = this.getOrientedPointOnPlanarFace(model, subPT);
             
             % Transform the buoy on the plane.
-            tformRansac = rigid3d(quat2rotm(quatinv(qApprox)), pApprox);
+            tformRansac = rigid3d(quat2rotm(qApprox), pApprox);
             buoyTformed = pctransform(this.buoyPT, tformRansac );
                        
             % Apply icp.

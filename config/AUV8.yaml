@@ -23,7 +23,7 @@ proc_mapping:
   # Segmentation
   segmentation:
     buoys:
-      cluster_dist: 0.4       # m 
+      cluster_dist: 0.6       # m 
       plane_tol: 0.05
       icp_inlier_ratio: 0.1
       z_normal_thres: 0.4
@@ -45,7 +45,7 @@ proc_mapping:
   # Parameters
   parameters:
     hydro:
-      pinger_depth: 3.250  # m
+      pinger_depth: 1.2  # m
       translation:
         x: 0.115    # m
         y: 0        # m 
