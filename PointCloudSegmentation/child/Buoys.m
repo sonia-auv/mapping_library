@@ -47,6 +47,9 @@ classdef Buoys < PointCloudSegmentation
             [this.PTlabels,numClusters] = pcsegdist(this.filteredPT,this.param.clusterDist);
             goodCluster = zeros(1, numClusters);
 
+            pcshow(this.filteredPT.Location, this.PTlabels);
+            colormap(hsv(numClusters));
+
             obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
             feature = repelem(obstacle, 2);
 
@@ -57,6 +60,7 @@ classdef Buoys < PointCloudSegmentation
             
             % One or more clusters found.
             if sum(goodCluster)
+                fprintf("INFO : proc mapping : sonar :  %d clusters found. \n", sum(goodCluster));
                 distances = zeros(1, sum(goodCluster));
                 for i = 1 : sum(goodCluster)
                     index = find(goodCluster == 1);
@@ -106,6 +110,7 @@ classdef Buoys < PointCloudSegmentation
                 end
             % No clusters found.
             else
+                fprintf("INFO : proc mapping : sonar : No clusters found. \n");
                 obstacle.IsValid = false;
                 obstacle.Name = char('Buoys');
                 obstacle.Confidence = single(0);
