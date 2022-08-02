@@ -46,9 +46,11 @@ classdef Buoys < PointCloudSegmentation
             % Get clusters
             [this.PTlabels,numClusters] = pcsegdist(this.filteredPT,this.param.clusterDist);
             goodCluster = zeros(1, numClusters);
-
-            pcshow(this.filteredPT.Location, this.PTlabels);
-            colormap(hsv(numClusters));
+            
+            if coder.target('MATLAB')
+                pcshow(this.filteredPT.Location, this.PTlabels);
+                colormap(hsv(numClusters));
+            end
 
             obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
             feature = repelem(obstacle, 2);
