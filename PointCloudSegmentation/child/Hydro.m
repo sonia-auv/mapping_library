@@ -18,8 +18,19 @@ classdef Hydro < PointCloudSegmentation
             this.param = param;
         end
         
-        function feature = SegementByAtribute(this, auvPose)            
+        function feature = SegementByAtribute(this, auvPose)    
+            if coder.target('MATLAB')
+                pcshow(this.filteredPT);
+                hold on
+            end
+
             [labels, numClusters] = pcsegdist(this.filteredPT, this.param.clusterDist);
+
+
+            if coder.target('MATLAB')
+                pcshow(this.filteredPT.Location,labels)
+                colormap(hsv(numClusters))
+            end
             
             % Get the biggest point cluster.
             index = mode(labels);
@@ -28,13 +39,12 @@ classdef Hydro < PointCloudSegmentation
 
             % Extract the cluster.
             hydroPt = select(this.filteredPT, logical(labels));
-
-            if coder.target('MATLAB')
-                pcshow(hydroPt);
-            end
             
             % Get the center of this cluster.
-            center = mean(hydroPt.Location, 1)
+            center = mean(hydroPt.Location, 1);
+            if coder.target('MATLAB')
+                poseplot(quaternion([1, 0, 0, 0]), "Position", center, ScaleFactor=0.2);
+            end
 
             obstacle = rosmessage("sonia_common/ObstacleInfo", "DataFormat", "struct");
             feature = repelem(obstacle, 1);
