@@ -38,10 +38,6 @@ classdef Tables < PointCloudSegmentation
                 idx = find(labels == i);
                 model = pcfitcuboid(this.filteredPT, idx);
 
-                if coder.target('MATLAB')
-                    plot(model)
-                end
-
                 % Calculate top area.
                 topArea = model.Dimensions(1) * model.Dimensions(2);
 
@@ -49,6 +45,9 @@ classdef Tables < PointCloudSegmentation
                     ratio = min([model.Dimensions(1), model.Dimensions(2)]) / max([model.Dimensions(1), model.Dimensions(2)]);
                     if ratio > this.param.squarenessRatio
                         goodClusters(i) = 1;
+                        if coder.target('MATLAB')
+                            plot(model)
+                        end
                     end
                 end
             end
@@ -69,7 +68,7 @@ classdef Tables < PointCloudSegmentation
             
             % Get the center pose.
             centerPose = mean(poses);
-
+            
             if coder.target('MATLAB')
                 poseplot(quaternion(centerPose(4:7)), "Position", centerPose(1:3), ScaleFactor=0.2);
             end
@@ -79,7 +78,7 @@ classdef Tables < PointCloudSegmentation
 
             % Reduce de confidence if we see more than 3 tables or only one
             % table. 
-            if sum(goodClusters) > 3 || sum(goodClusters) == 1
+            Aireif sum(goodClusters) > 3 || sum(goodClusters) == 1
                 confidence = 0.25 * confidence;
             end
             % Calculate the distance between two cluster if wee saw 2
