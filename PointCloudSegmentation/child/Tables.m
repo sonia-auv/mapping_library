@@ -84,7 +84,7 @@ classdef Tables < PointCloudSegmentation
             end
             % Calculate the distance between two cluster if wee saw 2
             % potential clusters only. 
-            if sum(goodClusters) == 25
+            if sum(goodClusters) == 2
                 distance = pdist([poses(1, 1:3);poses(2, 1:3)]);
                 if distance > this.param.maxBetweenDist
                     confidence = 0.25 * confidence;
